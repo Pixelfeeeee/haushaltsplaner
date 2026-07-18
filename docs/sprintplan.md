@@ -34,7 +34,7 @@ Ein gutes Fundament spart spaeter viel Frust. Gerade weil du selbst daran weiter
 
 ### Ziel
 
-Die Kernlogik fuer Aufgaben funktioniert zuerst lokal in der App.
+Die Kernlogik fuer Aufgaben funktioniert zuerst lokal in der App. Lokal bedeutet hier: Die Daten laufen erstmal im Frontend und noch nicht in Supabase.
 
 ### Ergebnis
 
@@ -44,10 +44,30 @@ Die Kernlogik fuer Aufgaben funktioniert zuerst lokal in der App.
 - Aufgaben als erledigt markieren
 - naechste Faelligkeit berechnen
 - Heute-Ansicht
+- Dringlichkeit und Wichtigkeit pro Aufgabe
+- Aufgaben nach morgen schieben
+- Heute-erledigt-Ueberblick
 
 ### Warum zuerst lokal?
 
 So koennen wir die Produktlogik schnell pruefen, bevor Authentifizierung, Datenbankregeln und Serverjobs dazukommen. Das reduziert Komplexitaet im ersten Schritt.
+
+## Sprint 1.5: Organizer-Modus
+
+### Ziel
+
+Die App hilft nicht nur beim Sammeln, sondern beim Sortieren des Tages.
+
+### Ergebnis
+
+- Fokusmodus
+- Wechsel zur naechsten Aufgabe
+- kompakte Tages-Roadmap
+- kompakter Wochenblick als Vorschau
+
+### Warum eigener Zwischensprint?
+
+Diese Funktionen bestimmen stark, wie sich die App anfuehlt. Sie sollten frueh ausprobiert werden, bevor wir Backend und Login einbauen.
 
 ## Sprint 2: Supabase-Anbindung und Login
 

@@ -65,3 +65,23 @@ Ein benannter CSS-Wert, zum Beispiel `--background`. Damit koennen Farben zentra
 ## localStorage
 
 Kleiner Speicher im Browser. Wir nutzen ihn, damit sich die App den gewaehlten Hell- oder Dunkelmodus merkt.
+
+## MVP
+
+Minimum Viable Product. Die erste kleine Version, die wirklich nutzbar ist und den wichtigsten Nutzen liefert.
+
+## Swipe
+
+Eine Wischgeste auf Touch-Geraeten. Beispiel: Aufgabe nach rechts ziehen, um sie auf morgen zu verschieben.
+
+## Dringlichkeit
+
+Beschreibt, ob eine Aufgabe zeitnah passieren muss.
+
+## Wichtigkeit
+
+Beschreibt, ob eine Aufgabe echte Folgen hat, wenn sie liegen bleibt.
+
+## Fokusmodus
+
+Eine Ansicht, die nur eine Aufgabe auf einmal zeigt. Das reduziert Ueberforderung durch lange Listen.
