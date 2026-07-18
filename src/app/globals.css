@@ -4,6 +4,17 @@
   --muted: #6f6a61;
   --surface: #fffaf1;
   --line: #ddd5c8;
+  --accent: #2f6f63;
+  --focus: rgba(47, 111, 99, 0.25);
+}
+[data-theme="dark"] {
+  --background: #171816;
+  --foreground: #f1eee7;
+  --muted: #aaa398;
+  --surface: #20221f;
+  --line: #393a35;
+  --accent: #8fc7b8;
+  --focus: rgba(143, 199, 184, 0.28);
 }
 html {
   height: 100%;
@@ -20,6 +31,7 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 160ms ease, color 160ms ease;
 }
 * {
   box-sizing: border-box;

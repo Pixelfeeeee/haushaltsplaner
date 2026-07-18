@@ -60,3 +60,19 @@ Geaendert wurde:
 - Kennzahlen stehen kompakt neben oder unter der Liste
 
 Warum: Die App soll im Alltag schnell bedienbar sein. Humor und smarte Erinnerungen gehoeren eher in Benachrichtigungen und E-Mails, nicht in jede einzelne Aufgabenzeile.
+
+## Nachtrag: Hell- und Dunkelmodus
+
+Die App hat einen kleinen Theme-Schalter oben rechts.
+
+Theme bedeutet hier: visuelles Farbschema der App.
+
+Umgesetzt wurde:
+
+- Hellmodus
+- Dunkelmodus
+- Speicherung der Auswahl im Browser
+- Farbsteuerung ueber CSS-Variablen
+- kleines Start-Script gegen kurzes Aufblitzen des falschen Themes
+
+Warum: Ein Haushaltsplaner wird wahrscheinlich morgens, abends und auf dem Smartphone genutzt. Ein Dunkelmodus ist dann angenehmer und reduziert visuelle Reibung.

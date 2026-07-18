@@ -6,13 +6,34 @@ export const metadata: Metadata = {
   description: "Gemeinsamer Planer fuer wiederkehrende Haushaltsaufgaben.",
 };
 
+const themeScript = `
+(() => {
+  try {
+    const savedTheme = window.localStorage.getItem("theme");
+    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+    const theme = savedTheme === "light" || savedTheme === "dark"
+      ? savedTheme
+      : systemTheme;
+
+    document.documentElement.dataset.theme = theme;
+  } catch {
+    document.documentElement.dataset.theme = "light";
+  }
+})();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="de">
+    <html lang="de" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body>{children}</body>
     </html>
   );

@@ -57,3 +57,11 @@ JavaScript mit Typen. Typen beschreiben, welche Form Daten haben sollen, und hel
 ## LESS
 
 Ein CSS-Vorprozessor. Wir schreiben Styles in `.less` und uebersetzen sie danach in normales CSS.
+
+## CSS-Variable
+
+Ein benannter CSS-Wert, zum Beispiel `--background`. Damit koennen Farben zentral umgeschaltet werden.
+
+## localStorage
+
+Kleiner Speicher im Browser. Wir nutzen ihn, damit sich die App den gewaehlten Hell- oder Dunkelmodus merkt.

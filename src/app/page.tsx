@@ -1,3 +1,4 @@
+import { ThemeToggle } from "@/components/theme-toggle";
 import styles from "./page.module.css";
 
 const todayTasks = [
@@ -33,7 +34,10 @@ export default function Home() {
           <h1>Heute</h1>
           <p className={styles.summary}>3 fällig, 0 erledigt</p>
         </div>
-        <button className={styles.primaryAction}>Aufgabe anlegen</button>
+        <div className={styles.actions}>
+          <button className={styles.primaryAction}>Aufgabe anlegen</button>
+          <ThemeToggle />
+        </div>
       </header>
 
       <main className={styles.shell}>

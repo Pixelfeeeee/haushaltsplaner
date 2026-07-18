@@ -20,7 +20,7 @@
 .summary,
 .taskMeta,
 .metricGroup span {
-  color: #6f6a61;
+  color: var(--muted);
 }
 .kicker {
   font-size: 14px;
@@ -35,12 +35,17 @@
   padding: 0 16px;
   border: 0;
   border-radius: 8px;
-  color: #ffffff;
-  background: #2f6f63;
+  color: var(--background);
+  background: var(--foreground);
   font-weight: 700;
 }
 .primaryAction:hover {
-  background: #1f4e45;
+  background: var(--accent);
+}
+.actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 .shell {
   display: grid;
@@ -61,7 +66,7 @@
 }
 .taskList {
   display: grid;
-  border-top: 1px solid #dedbd2;
+  border-top: 1px solid var(--line);
 }
 .taskItem {
   display: grid;
@@ -70,7 +75,7 @@
   align-items: center;
   min-height: 78px;
   padding: 16px 0;
-  border-bottom: 1px solid #dedbd2;
+  border-bottom: 1px solid var(--line);
 }
 .taskItem h3 {
   margin-top: 4px;
@@ -97,17 +102,17 @@
 .checkControl span {
   width: 24px;
   height: 24px;
-  border: 2px solid #2f6f63;
+  border: 2px solid var(--accent);
   border-radius: 999px;
   background: transparent;
 }
 .checkControl input:focus-visible + span {
-  outline: 3px solid rgba(47, 111, 99, 0.25);
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
 .checkControl input:checked + span {
-  background: #2f6f63;
-  box-shadow: inset 0 0 0 5px #f6f4ef;
+  background: var(--accent);
+  box-shadow: inset 0 0 0 5px var(--background);
 }
 .sidebar {
   display: grid;
@@ -119,7 +124,7 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
   padding-bottom: 24px;
-  border-bottom: 1px solid #dedbd2;
+  border-bottom: 1px solid var(--line);
 }
 .metricGroup div {
   display: grid;
@@ -143,7 +148,7 @@
 }
 .upcomingList li {
   padding: 12px 0;
-  border-top: 1px solid #dedbd2;
+  border-top: 1px solid var(--line);
   font-size: 15px;
 }
 @media (max-width: 820px) {
@@ -160,5 +165,9 @@
   .shell {
     grid-template-columns: 1fr;
     gap: 36px;
+  }
+  .actions {
+    width: 100%;
+    justify-content: space-between;
   }
 }

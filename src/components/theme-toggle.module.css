@@ -1,0 +1,20 @@
+.themeToggle {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--foreground);
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+}
+.themeToggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.themeToggle:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
