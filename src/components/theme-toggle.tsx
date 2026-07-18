@@ -1,13 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import styles from "./theme-toggle.module.css";
 
 type Theme = "light" | "dark";
 
-function getInitialTheme(): Theme {
+function getThemeSnapshot(): Theme {
   if (typeof window === "undefined") {
     return "light";
+  }
+
+  const documentTheme = document.documentElement.dataset.theme;
+
+  if (documentTheme === "light" || documentTheme === "dark") {
+    return documentTheme;
   }
 
   const savedTheme = window.localStorage.getItem("theme");
@@ -21,13 +27,32 @@ function getInitialTheme(): Theme {
     : "light";
 }
 
-export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>(() => getInitialTheme());
+function getServerThemeSnapshot(): Theme {
+  return "light";
+}
 
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    window.localStorage.setItem("theme", theme);
-  }, [theme]);
+function subscribeToThemeChange(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange);
+  window.addEventListener("themechange", onStoreChange);
+
+  return () => {
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener("themechange", onStoreChange);
+  };
+}
+
+function setTheme(theme: Theme) {
+  document.documentElement.dataset.theme = theme;
+  window.localStorage.setItem("theme", theme);
+  window.dispatchEvent(new Event("themechange"));
+}
+
+export function ThemeToggle() {
+  const theme = useSyncExternalStore(
+    subscribeToThemeChange,
+    getThemeSnapshot,
+    getServerThemeSnapshot,
+  );
 
   function toggleTheme() {
     const nextTheme = theme === "light" ? "dark" : "light";

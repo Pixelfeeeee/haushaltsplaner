@@ -48,6 +48,10 @@ Die Kernlogik fuer Aufgaben funktioniert zuerst lokal in der App. Lokal bedeutet
 - Aufgaben nach morgen schieben
 - Diese-Woche-erledigt-Ueberblick
 
+### Sprint-1-Schnitt
+
+Zuerst wird "auf morgen schieben" als Button umgesetzt. Die Swipe-Geste folgt danach, weil sie mehr Interaktionslogik und mobile Tests braucht.
+
 ### Warum zuerst lokal?
 
 So koennen wir die Produktlogik schnell pruefen, bevor Authentifizierung, Datenbankregeln und Serverjobs dazukommen. Das reduziert Komplexitaet im ersten Schritt.

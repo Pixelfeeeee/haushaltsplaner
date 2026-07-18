@@ -85,3 +85,27 @@ Beschreibt, ob eine Aufgabe echte Folgen hat, wenn sie liegen bleibt.
 ## Fokusmodus
 
 Eine Ansicht, die nur eine Aufgabe auf einmal zeigt. Das reduziert Ueberforderung durch lange Listen.
+
+## State
+
+Der aktuelle Zustand einer Komponente. Beispiel: Welche Aufgaben sind offen, erledigt oder auf morgen verschoben?
+
+## Score
+
+Ein berechneter Wert, mit dem die App Aufgaben sortieren kann. Hier nutzt die App Dringlichkeit, Wichtigkeit und Dauer.
+
+## Faelligkeit
+
+Das Datum, an dem eine Aufgabe dran ist.
+
+## Hydration
+
+React verbindet serverseitig erzeugtes HTML im Browser mit Interaktivitaet. Wenn Server- und Browserzustand nicht zusammenpassen, entstehen Hydration-Fehler.
+
+## useSyncExternalStore
+
+React-Hook zum Lesen eines Zustands ausserhalb von React. Wir nutzen ihn fuer das Theme, das am HTML-Element und im Browser-Speicher liegt.
+
+## UTC
+
+Weltweite Referenzzeit. Hilft, Datumsberechnungen stabil zu machen, weil sie nicht von der lokalen Zeitzone verschoben werden.
