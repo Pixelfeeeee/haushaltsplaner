@@ -2,28 +2,25 @@ import styles from "./page.module.css";
 
 const todayTasks = [
   {
-    title: "Bettwaesche wechseln",
+    title: "Bettwäsche wechseln",
     category: "Schlafzimmer",
     rhythm: "alle 14 Tage",
-    tone: "Die Kissen wirken bereits dramatisch.",
   },
   {
-    title: "Kuehlschrank auswischen",
-    category: "Kueche",
+    title: "Kühlschrank auswischen",
+    category: "Küche",
     rhythm: "alle 30 Tage",
-    tone: "Da drin wohnt kein Geheimnis, nur Arbeit.",
   },
   {
     title: "Bad Deep Clean",
     category: "Bad",
     rhythm: "alle 7 Tage",
-    tone: "Das Waschbecken fuehrt Protokoll.",
   },
 ];
 
 const upcomingTasks = [
   "Waschmaschine reinigen",
-  "Vorratsschrank pruefen",
+  "Vorratsschrank prüfen",
   "Fensterbank abwischen",
 ];
 
@@ -32,22 +29,18 @@ export default function Home() {
     <div className={styles.page}>
       <header className={styles.topbar}>
         <div>
-          <p className={styles.eyebrow}>Haushaltsplaner</p>
-          <h1>Heute will der Haushalt Aufmerksamkeit.</h1>
+          <p className={styles.kicker}>Haushaltsplaner</p>
+          <h1>Heute</h1>
+          <p className={styles.summary}>3 fällig, 0 erledigt</p>
         </div>
         <button className={styles.primaryAction}>Aufgabe anlegen</button>
       </header>
 
       <main className={styles.shell}>
-        <section className={styles.todayPanel} aria-labelledby="today-title">
-          <div className={styles.sectionHeader}>
-            <div>
-              <p className={styles.eyebrow}>Heute</p>
-              <h2 id="today-title">3 Aufgaben faellig</h2>
-            </div>
-            <span className={styles.statusBadge}>Morgendruck aktiv</span>
-          </div>
-
+        <section aria-labelledby="today-title">
+          <h2 className={styles.visuallyHidden} id="today-title">
+            Aufgaben für heute
+          </h2>
           <div className={styles.taskList}>
             {todayTasks.map((task) => (
               <article className={styles.taskItem} key={task.title}>
@@ -61,26 +54,30 @@ export default function Home() {
                     <span>{task.rhythm}</span>
                   </div>
                   <h3>{task.title}</h3>
-                  <p>{task.tone}</p>
                 </div>
               </article>
             ))}
           </div>
         </section>
 
-        <aside className={styles.sidePanel} aria-label="Planungsuebersicht">
-          <section>
-            <p className={styles.eyebrow}>Haushalt</p>
-            <h2>Sandra & Haushalt</h2>
-            <p>
-              Sprint 0 zeigt erst statische Beispieldaten. Statisch bedeutet:
-              Die Daten stehen noch fest im Code und kommen noch nicht aus einer
-              Datenbank.
-            </p>
+        <aside className={styles.sidebar} aria-label="Planungsuebersicht">
+          <section className={styles.metricGroup}>
+            <div>
+              <span>Heute</span>
+              <strong>3</strong>
+            </div>
+            <div>
+              <span>Überfällig</span>
+              <strong>0</strong>
+            </div>
+            <div>
+              <span>Erledigt</span>
+              <strong>0</strong>
+            </div>
           </section>
 
           <section>
-            <p className={styles.eyebrow}>Demnaechst</p>
+            <h2 className={styles.sidebarTitle}>Demnächst</h2>
             <ul className={styles.upcomingList}>
               {upcomingTasks.map((task) => (
                 <li key={task}>{task}</li>

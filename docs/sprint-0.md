@@ -46,3 +46,17 @@ Sprint 1 baut die echte Aufgabenlogik:
 - eigene Aufgaben
 - Erledigen
 - naechste Faelligkeit berechnen
+
+## Nachtrag: Reduzierte Startseite
+
+Die Startseite wurde nach der ersten Sichtung bewusst reduziert.
+
+Geaendert wurde:
+
+- keine verschachtelten Karten um Aufgaben
+- keine zusaetzlichen Spruchzeilen pro Aufgabe
+- kein Status-Badge wie "Morgendruck aktiv"
+- Aufgaben werden als klare Liste mit Linien dargestellt
+- Kennzahlen stehen kompakt neben oder unter der Liste
+
+Warum: Die App soll im Alltag schnell bedienbar sein. Humor und smarte Erinnerungen gehoeren eher in Benachrichtigungen und E-Mails, nicht in jede einzelne Aufgabenzeile.
