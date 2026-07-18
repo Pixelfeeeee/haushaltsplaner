@@ -25,6 +25,8 @@ const upcomingTasks = [
   "Fensterbank abwischen",
 ];
 
+const completedThisWeek = 5;
+
 export default function Home() {
   return (
     <div className={styles.page}>
@@ -32,7 +34,9 @@ export default function Home() {
         <div>
           <p className={styles.kicker}>Haushaltsplaner</p>
           <h1>Heute</h1>
-          <p className={styles.summary}>3 fällig, 0 erledigt</p>
+          <p className={styles.summary}>
+            3 fällig, {completedThisWeek} diese Woche erledigt
+          </p>
         </div>
         <div className={styles.actions}>
           <button className={styles.primaryAction}>Aufgabe anlegen</button>
@@ -75,8 +79,8 @@ export default function Home() {
               <strong>0</strong>
             </div>
             <div>
-              <span>Erledigt</span>
-              <strong>0</strong>
+              <span>Woche erledigt</span>
+              <strong>{completedThisWeek}</strong>
             </div>
           </section>
 

@@ -46,7 +46,7 @@ Die Kernlogik fuer Aufgaben funktioniert zuerst lokal in der App. Lokal bedeutet
 - Heute-Ansicht
 - Dringlichkeit und Wichtigkeit pro Aufgabe
 - Aufgaben nach morgen schieben
-- Heute-erledigt-Ueberblick
+- Diese-Woche-erledigt-Ueberblick
 
 ### Warum zuerst lokal?
 

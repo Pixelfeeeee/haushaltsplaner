@@ -71,13 +71,13 @@ Moegliche Bedienung:
 - Buttons "Erledigt", "Morgen", "Ueberspringen"
 - kleine Anzeige wie "1 von 3"
 
-### Heute erledigt
+### Diese Woche erledigt
 
-Die App zeigt eine kleine Liste der heute erledigten Aufgaben.
+Die App zeigt, wie viele Aufgaben in der aktuellen Woche erledigt wurden.
 
-Warum: Das ist mental wichtig. Wer schnell das Gefuehl hat, nichts geschafft zu haben, bekommt einen sichtbaren Nachweis: Doch, da ist etwas passiert.
+Warum: Das ist mental wichtig. Wer schnell das Gefuehl hat, nichts geschafft zu haben, bekommt einen sichtbaren Nachweis: Doch, in dieser Woche ist etwas passiert.
 
-Die Ansicht soll ruhig bleiben und nicht wie eine Statistik-App wirken.
+Die Ansicht soll ruhig bleiben und nicht wie eine Statistik-App wirken. Eine kleine Kennzahl reicht fuer den MVP.
 
 ## Spaeter pruefen
 
@@ -111,7 +111,7 @@ Warum: Humor ist als Impuls gut. In jeder Aufgabenzeile waere er schnell zu viel
 2. Aufgaben erledigen
 3. Aufgaben nach morgen schieben
 4. Fokusmodus mit Wechseln
-5. Heute-erledigt-Ueberblick
+5. Diese-Woche-erledigt-Ueberblick
 6. kompakter Wochenblick
 
 Nicht fuer den ersten MVP:
