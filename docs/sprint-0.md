@@ -76,3 +76,26 @@ Umgesetzt wurde:
 - kleines Start-Script gegen kurzes Aufblitzen des falschen Themes
 
 Warum: Ein Haushaltsplaner wird wahrscheinlich morgens, abends und auf dem Smartphone genutzt. Ein Dunkelmodus ist dann angenehmer und reduziert visuelle Reibung.
+
+## Nachtrag: Waermere Farben und Schrift
+
+Die Farbpalette wurde waermer und positiver gemacht.
+
+Palette bedeutet: abgestimmte Gruppe von Farben fuer Hintergrund, Text, Linien und Aktionen.
+
+Umgesetzt wurde:
+
+- heller Modus mit warmem, sanftem Hintergrund
+- dunkler Modus mit weichem Dunkelton statt hartem Schwarz
+- gruener Akzent fuer positive, ruhige Aktionen
+- moderne Systemschrift statt Arial
+
+Systemschrift bedeutet: Die App nutzt die Schrift, die auf dem Geraet bereits vorhanden ist. Das ist schnell, robust und wirkt auf macOS, Windows und Smartphones nativer.
+
+Moegliche spaetere externe Schriften:
+
+- Inter: sehr klar und neutral
+- Nunito Sans: weicher und freundlicher
+- Atkinson Hyperlegible: besonders gut lesbar
+
+Warum wir erstmal Systemschrift nutzen: Externe Schriften koennen Ladezeit und Datenschutzfragen erzeugen. Fuer den MVP ist eine gute Systemschrift die stabilere Entscheidung.
