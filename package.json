@@ -1,0 +1,27 @@
+{
+  "name": "haushaltsplaner",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm styles && next dev",
+    "build": "pnpm styles && next build",
+    "start": "next start",
+    "lint": "eslint",
+    "styles": "lessc src/styles/globals.less src/app/globals.css && lessc src/styles/page.less src/app/page.module.css"
+  },
+  "dependencies": {
+    "next": "16.2.10",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.10",
+    "less": "^4.6.7",
+    "less-loader": "^13.0.0",
+    "typescript": "^5"
+  }
+}
