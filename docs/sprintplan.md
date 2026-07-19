@@ -165,7 +165,24 @@ Aufgaben koennen schneller angelegt werden, ohne dass man jede Routine selbst fo
 
 Der Vorlagenpool zeigt, welche Aufgabenstruktur wirklich praktisch ist. Dadurch wissen wir spaeter besser, welche Seed-Daten oder Vorlagen in einer Datenbank sinnvoll waeren.
 
-## Sprint 7: Supabase-Anbindung und Login
+## Sprint 7: Groesserer Aufgabenpool und Suchvorschlaege
+
+### Ziel
+
+Der Aufgabenpool soll breit genug sein, damit man typische Haushaltsroutinen schnell findet.
+
+### Ergebnis
+
+- deutlich groesserer Vorlagenpool
+- Vorschlaege beim Tippen im Namensfeld
+- Suche funktioniert ueber Aufgabenname und Raum
+- maximal 10 Treffer, damit die mobile Ansicht ruhig bleibt
+
+### Warum noch vor Supabase?
+
+Der Aufgabenpool ist Teil des Produktgefuehls. Bevor Vorlagen spaeter in einer Datenbank landen, testen wir lokal, welche Struktur im Alltag schnell genug ist.
+
+## Sprint 8: Supabase-Anbindung und Login
 
 ### Ziel
 
@@ -183,7 +200,7 @@ Nutzerinnen und Nutzer koennen sich anmelden und ihre eigenen Daten speichern.
 
 Supabase bringt Postgres, Auth und Row Level Security mit. Besonders RLS ist wichtig, damit Daten nicht versehentlich zwischen Nutzerinnen und Nutzern sichtbar werden.
 
-## Sprint 8: Haushalte und gemeinsame Nutzung
+## Sprint 9: Haushalte und gemeinsame Nutzung
 
 ### Ziel
 
@@ -201,7 +218,7 @@ Mehrere Personen koennen einem Haushalt angehoeren und gemeinsame Aufgaben sehen
 
 Wenn wir Haushalte erst sehr spaet einbauen, muessten wir viele Datenstrukturen umbauen. Deshalb kommt die gemeinsame Nutzung relativ frueh.
 
-## Sprint 8: Erinnerungen
+## Sprint 10: Erinnerungen
 
 ### Ziel
 
@@ -219,25 +236,7 @@ Die App erinnert morgens und abends an Aufgaben.
 
 Push-Benachrichtigungen sind auf Web-Apps nicht immer gleich verlaesslich. E-Mail ist technisch weniger elegant, aber robuster und als Fallback sinnvoll.
 
-## Sprint 9: Aufgabenpool ausbauen und UX polieren
-
-### Ziel
-
-Die App fuehlt sich alltagstauglich an.
-
-### Ergebnis
-
-- groesserer Aufgabenpool
-- Kategorien und Filter
-- bessere leere Zustaende
-- kleine humorvolle Texte
-- responsive UI fuer Smartphone und Desktop
-
-### Warum erst nach der Kernlogik?
-
-Ein schoener Aufgabenpool bringt wenig, wenn Wiederholungen und Erledigungen nicht stimmen. Deshalb polieren wir, nachdem die Mechanik verlaesslich laeuft.
-
-## Sprint 10: Deployment und Betriebsdokumentation
+## Sprint 11: Deployment und Betriebsdokumentation
 
 ### Ziel
 

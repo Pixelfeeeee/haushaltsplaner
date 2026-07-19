@@ -118,6 +118,14 @@ Ein vorbereiteter Datensatz, der ein Formular fuellen kann. Beispiel: "Kuehlschr
 
 Englisches Wort fuer Vorlage oder Voreinstellung. Im Code kann ein Preset helfen, gleiche Eingaben nicht immer wieder neu zu tippen.
 
+## Autocomplete
+
+Automatische Vorschlaege waehrend der Eingabe. Beispiel: Beim Tippen von "Kueh" schlaegt die App "Kuehlschrank auswischen" vor.
+
+## Typeahead
+
+Sehr aehnlich wie Autocomplete. Gemeint ist eine Suche, die schon beim Tippen Treffer zeigt, bevor man das komplette Wort geschrieben hat.
+
 ## Formular
 
 Eine Eingabeflaeche fuer Daten. In unserer App nutzt das Formular wenige Felder, damit neue Aufgaben schnell angelegt werden koennen.

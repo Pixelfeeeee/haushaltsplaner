@@ -427,8 +427,13 @@ function TaskForm({ initialTask, onSaveTask, todayIso }: TaskFormProps) {
     initialTask?.estimatedMinutes ?? 15,
   );
   const [dueDate, setDueDate] = useState(initialTask?.dueDate ?? todayIso);
-  const selectedRoomTemplates = taskTemplates.filter(
-    (template) => template.roomId === roomId,
+  const roomTemplates = useMemo(
+    () => taskTemplates.filter((template) => template.roomId === roomId),
+    [roomId],
+  );
+  const suggestedTemplates = useMemo(
+    () => getSuggestedTemplates(title, roomId, roomTemplates),
+    [roomId, roomTemplates, title],
   );
 
   function applyTemplate(template: TaskTemplate) {
@@ -490,29 +495,6 @@ function TaskForm({ initialTask, onSaveTask, todayIso }: TaskFormProps) {
             ))}
           </select>
         </label>
-        {!initialTask ? (
-          <section className={styles.templatePanel} aria-label="Aufgabenvorlagen">
-            <div className={styles.templateHeader}>
-              <span>Vorlagen</span>
-              <strong>{getRoom(roomId).name}</strong>
-            </div>
-            <div className={styles.templateList}>
-              {selectedRoomTemplates.map((template) => (
-                <button
-                  key={template.id}
-                  onClick={() => applyTemplate(template)}
-                  type="button"
-                >
-                  <span>{template.title}</span>
-                  <small>
-                    {formatInterval(template.intervalDays)} ·{" "}
-                    {template.estimatedMinutes} Min.
-                  </small>
-                </button>
-              ))}
-            </div>
-          </section>
-        ) : null}
         <label className={styles.field}>
           <span>Name</span>
           <input
@@ -522,6 +504,42 @@ function TaskForm({ initialTask, onSaveTask, todayIso }: TaskFormProps) {
             value={title}
           />
         </label>
+        {!initialTask ? (
+          <section className={styles.templatePanel} aria-label="Aufgabenvorlagen">
+            <div className={styles.templateHeader}>
+              <span>
+                {title.trim().length > 0 ? "Vorschläge" : "Schnellauswahl"}
+              </span>
+              <strong>
+                {title.trim().length > 0
+                  ? `${suggestedTemplates.length} Treffer`
+                  : getRoom(roomId).name}
+              </strong>
+            </div>
+            {suggestedTemplates.length > 0 ? (
+              <div className={styles.templateList}>
+                {suggestedTemplates.map((template) => (
+                  <button
+                    key={template.id}
+                    onClick={() => applyTemplate(template)}
+                    type="button"
+                  >
+                    <span>{template.title}</span>
+                    <small>
+                      {getRoom(template.roomId).name} ·{" "}
+                      {formatInterval(template.intervalDays)} ·{" "}
+                      {template.estimatedMinutes} Min.
+                    </small>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className={styles.templateEmpty}>
+                Keine Vorlage gefunden. Du kannst die Aufgabe trotzdem speichern.
+              </p>
+            )}
+          </section>
+        ) : null}
         <div className={styles.formGrid}>
           <label className={styles.field}>
             <span>Alle wie viele Tage?</span>
@@ -947,6 +965,46 @@ function formatPriority(priority: HouseholdTask["urgency"]) {
   }
 
   return "niedrig";
+}
+
+function getSuggestedTemplates(
+  title: string,
+  roomId: RoomId,
+  roomTemplates: TaskTemplate[],
+) {
+  const searchTerm = normalizeSearchTerm(title);
+
+  if (!searchTerm) {
+    return roomTemplates.slice(0, 10);
+  }
+
+  return taskTemplates
+    .filter((template) => {
+      const room = getRoom(template.roomId);
+      const searchableText = normalizeSearchTerm(`${template.title} ${room.name}`);
+
+      return searchableText.includes(searchTerm);
+    })
+    .sort((first, second) => {
+      if (first.roomId !== second.roomId) {
+        return first.roomId === roomId ? -1 : 1;
+      }
+
+      return first.title.localeCompare(second.title, "de");
+    })
+    .slice(0, 10);
+}
+
+function normalizeSearchTerm(value: string) {
+  return value
+    .trim()
+    .toLocaleLowerCase("de")
+    .replace(/ä/g, "ae")
+    .replace(/ö/g, "oe")
+    .replace(/ü/g, "ue")
+    .replace(/ß/g, "ss")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 }
 
 type PageSummaryParams = {
