@@ -14,9 +14,11 @@ import {
   isOverdue,
   rooms,
   sortTasksForRoadmap,
+  taskTemplates,
   type HouseholdTask,
   type Room,
   type RoomId,
+  type TaskTemplate,
 } from "@/lib/tasks";
 import { ThemeToggle } from "@/components/theme-toggle";
 import styles from "@/app/page.module.css";
@@ -425,6 +427,18 @@ function TaskForm({ initialTask, onSaveTask, todayIso }: TaskFormProps) {
     initialTask?.estimatedMinutes ?? 15,
   );
   const [dueDate, setDueDate] = useState(initialTask?.dueDate ?? todayIso);
+  const selectedRoomTemplates = taskTemplates.filter(
+    (template) => template.roomId === roomId,
+  );
+
+  function applyTemplate(template: TaskTemplate) {
+    setTitle(template.title);
+    setRoomId(template.roomId);
+    setIntervalDays(template.intervalDays);
+    setUrgency(template.urgency);
+    setImportance(template.importance);
+    setEstimatedMinutes(template.estimatedMinutes);
+  }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -464,6 +478,42 @@ function TaskForm({ initialTask, onSaveTask, todayIso }: TaskFormProps) {
           </h2>
         </div>
         <label className={styles.field}>
+          <span>Raum</span>
+          <select
+            onChange={(event) => setRoomId(event.target.value as RoomId)}
+            value={roomId}
+          >
+            {rooms.map((room) => (
+              <option key={room.id} value={room.id}>
+                {room.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        {!initialTask ? (
+          <section className={styles.templatePanel} aria-label="Aufgabenvorlagen">
+            <div className={styles.templateHeader}>
+              <span>Vorlagen</span>
+              <strong>{getRoom(roomId).name}</strong>
+            </div>
+            <div className={styles.templateList}>
+              {selectedRoomTemplates.map((template) => (
+                <button
+                  key={template.id}
+                  onClick={() => applyTemplate(template)}
+                  type="button"
+                >
+                  <span>{template.title}</span>
+                  <small>
+                    {formatInterval(template.intervalDays)} ·{" "}
+                    {template.estimatedMinutes} Min.
+                  </small>
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : null}
+        <label className={styles.field}>
           <span>Name</span>
           <input
             autoFocus
@@ -473,19 +523,6 @@ function TaskForm({ initialTask, onSaveTask, todayIso }: TaskFormProps) {
           />
         </label>
         <div className={styles.formGrid}>
-          <label className={styles.field}>
-            <span>Raum</span>
-            <select
-              onChange={(event) => setRoomId(event.target.value as RoomId)}
-              value={roomId}
-            >
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name}
-                </option>
-              ))}
-            </select>
-          </label>
           <label className={styles.field}>
             <span>Alle wie viele Tage?</span>
             <input

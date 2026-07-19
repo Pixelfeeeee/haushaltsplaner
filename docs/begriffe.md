@@ -110,6 +110,14 @@ Daten, die von einer React-Komponente an eine untergeordnete Komponente weiterge
 
 Ein voreingestellter Wert. Beim Aufgabe-anlegen setzen wir zum Beispiel Dringlichkeit erstmal auf `mittel`.
 
+## Vorlage
+
+Ein vorbereiteter Datensatz, der ein Formular fuellen kann. Beispiel: "Kuehlschrank auswischen" bringt Raum, Rhythmus und Dauer schon mit.
+
+## Preset
+
+Englisches Wort fuer Vorlage oder Voreinstellung. Im Code kann ein Preset helfen, gleiche Eingaben nicht immer wieder neu zu tippen.
+
 ## Formular
 
 Eine Eingabeflaeche fuer Daten. In unserer App nutzt das Formular wenige Felder, damit neue Aufgaben schnell angelegt werden koennen.

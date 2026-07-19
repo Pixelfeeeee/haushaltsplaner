@@ -303,6 +303,74 @@
   }
 }
 
+.templatePanel {
+  display: grid;
+  gap: 10px;
+}
+
+.templateHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+
+  strong {
+    color: var(--foreground);
+    font-size: 13px;
+  }
+}
+
+.templateList {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  button {
+    display: grid;
+    min-width: 176px;
+    gap: 4px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--foreground);
+    background: var(--surface);
+    text-align: left;
+  }
+
+  button:hover,
+  button:focus-visible {
+    border-color: var(--accent);
+    outline: 0;
+  }
+
+  span {
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 750;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 .formGrid {
   display: grid;
   gap: 14px;
@@ -522,7 +590,7 @@
   }
 
   .formGrid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .rowActions {

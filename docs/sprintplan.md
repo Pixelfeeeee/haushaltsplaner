@@ -148,7 +148,24 @@ Aufgaben bleiben im Browser erhalten, auch wenn die Seite neu geladen wird.
 
 Lokale Speicherung macht die App sofort alltagstauglicher. Gleichzeitig testen wir damit, welche Daten wirklich dauerhaft gebraucht werden, bevor wir Supabase anbinden.
 
-## Sprint 6: Supabase-Anbindung und Login
+## Sprint 6: Vorlagenpool fuer Haushaltsaufgaben
+
+### Ziel
+
+Aufgaben koennen schneller angelegt werden, ohne dass man jede Routine selbst formulieren muss.
+
+### Ergebnis
+
+- zentraler Vorlagenpool
+- Vorlagen nach Raum gefiltert
+- ein Klick fuellt das Aufgabe-anlegen-Formular
+- Speichern bleibt ein bewusster zweiter Schritt
+
+### Warum dieser Sprint vor Supabase kommt
+
+Der Vorlagenpool zeigt, welche Aufgabenstruktur wirklich praktisch ist. Dadurch wissen wir spaeter besser, welche Seed-Daten oder Vorlagen in einer Datenbank sinnvoll waeren.
+
+## Sprint 7: Supabase-Anbindung und Login
 
 ### Ziel
 
@@ -166,7 +183,7 @@ Nutzerinnen und Nutzer koennen sich anmelden und ihre eigenen Daten speichern.
 
 Supabase bringt Postgres, Auth und Row Level Security mit. Besonders RLS ist wichtig, damit Daten nicht versehentlich zwischen Nutzerinnen und Nutzern sichtbar werden.
 
-## Sprint 7: Haushalte und gemeinsame Nutzung
+## Sprint 8: Haushalte und gemeinsame Nutzung
 
 ### Ziel
 
