@@ -66,6 +66,18 @@ Ein benannter CSS-Wert, zum Beispiel `--background`. Damit koennen Farben zentra
 
 Kleiner Speicher im Browser. Wir nutzen ihn, damit sich die App den gewaehlten Hell- oder Dunkelmodus merkt.
 
+## Key
+
+Ein eindeutiger Name fuer gespeicherte Daten. Beispiel: `haushaltsplaner.tasks`.
+
+## Seed-Daten
+
+Startdaten, die im Code mitgeliefert werden. Sie fuellen die App beim ersten Oeffnen, bevor eigene Daten gespeichert sind.
+
+## Migration
+
+Eine geordnete Umwandlung alter Daten in eine neue Struktur. Das wird wichtig, wenn sich unser Aufgabenmodell spaeter aendert.
+
 ## MVP
 
 Minimum Viable Product. Die erste kleine Version, die wirklich nutzbar ist und den wichtigsten Nutzen liefert.
@@ -90,6 +102,30 @@ Eine Ansicht, die nur eine Aufgabe auf einmal zeigt. Das reduziert Ueberforderun
 
 Der aktuelle Zustand einer Komponente. Beispiel: Welche Aufgaben sind offen, erledigt oder auf morgen verschoben?
 
+## Props
+
+Daten, die von einer React-Komponente an eine untergeordnete Komponente weitergegeben werden. Beispiel: `todayIso` wird an die Aufgabenliste gereicht.
+
+## Default
+
+Ein voreingestellter Wert. Beim Aufgabe-anlegen setzen wir zum Beispiel Dringlichkeit erstmal auf `mittel`.
+
+## Formular
+
+Eine Eingabeflaeche fuer Daten. In unserer App nutzt das Formular wenige Felder, damit neue Aufgaben schnell angelegt werden koennen.
+
+## Wiederholungslogik
+
+Code, der berechnet, wann eine wiederkehrende Aufgabe das naechste Mal faellig ist.
+
+## Ueberspringen
+
+Eine Aufgabe heute auslassen, ohne den Grundrhythmus zu verschieben.
+
+## Rhythmus
+
+Der geplante Abstand einer Aufgabe, zum Beispiel alle 7 oder alle 30 Tage.
+
 ## Score
 
 Ein berechneter Wert, mit dem die App Aufgaben sortieren kann. Hier nutzt die App Dringlichkeit, Wichtigkeit und Dauer.
@@ -97,6 +133,10 @@ Ein berechneter Wert, mit dem die App Aufgaben sortieren kann. Hier nutzt die Ap
 ## Faelligkeit
 
 Das Datum, an dem eine Aufgabe dran ist.
+
+## Startdatum
+
+Das erste Faelligkeitsdatum einer wiederkehrenden Aufgabe.
 
 ## Hydration
 
@@ -109,3 +149,27 @@ React-Hook zum Lesen eines Zustands ausserhalb von React. Wir nutzen ihn fuer da
 ## UTC
 
 Weltweite Referenzzeit. Hilft, Datumsberechnungen stabil zu machen, weil sie nicht von der lokalen Zeitzone verschoben werden.
+
+## Tab
+
+Ein umschaltbarer Bereich innerhalb derselben Seite. In unserer App sind `Heute`, `Raeume` und `Alle` solche Tabs.
+
+## Bottom-Navigation
+
+Navigation am unteren Bildschirmrand. Auf Smartphones ist sie gut erreichbar, weil der Daumen dort natuerlich liegt.
+
+## Mobile-first
+
+Die Gestaltung und CSS-Regeln starten beim kleinen Smartphone-Bildschirm. Desktop wird danach als Erweiterung behandelt.
+
+## Datenmodell
+
+Die festgelegte Struktur unserer Daten. Beispiel: Eine Aufgabe hat Titel, Faelligkeit, Status und Raum.
+
+## ID
+
+Eine technische Kennung. Nutzer sehen meist den Namen, der Code nutzt aber eine stabile ID, zum Beispiel `kitchen`.
+
+## CSS Custom Property
+
+Eine CSS-Variable. Wir nutzen sie zum Beispiel, um die Raumfarbe als `--room-color` an ein Element zu geben.

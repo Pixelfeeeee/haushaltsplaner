@@ -1,10 +1,25 @@
 export type PriorityLevel = "low" | "medium" | "high";
 export type TaskStatus = "open" | "completed" | "postponed";
+export type RoomId =
+  | "kitchen"
+  | "bathroom"
+  | "bedroom"
+  | "living-room"
+  | "laundry"
+  | "hallway"
+  | "general";
+
+export type Room = {
+  id: RoomId;
+  name: string;
+  color: string;
+};
 
 export type HouseholdTask = {
   id: string;
   title: string;
   category: string;
+  roomId: RoomId;
   intervalDays: number;
   dueDate: string;
   urgency: PriorityLevel;
@@ -15,11 +30,22 @@ export type HouseholdTask = {
   postponedUntil?: string;
 };
 
+export const rooms: Room[] = [
+  { id: "kitchen", name: "Küche", color: "#dc8a4c" },
+  { id: "bathroom", name: "Bad", color: "#6aa6b8" },
+  { id: "bedroom", name: "Schlafzimmer", color: "#9f8bc3" },
+  { id: "living-room", name: "Wohnzimmer", color: "#7aa66a" },
+  { id: "laundry", name: "Wäsche", color: "#d6a85c" },
+  { id: "hallway", name: "Flur", color: "#c87983" },
+  { id: "general", name: "Allgemein", color: "#8c8177" },
+];
+
 export const initialTasks: HouseholdTask[] = [
   {
     id: "change-bedding",
     title: "Bettwäsche wechseln",
     category: "Schlafzimmer",
+    roomId: "bedroom",
     intervalDays: 14,
     dueDate: "2026-07-18",
     urgency: "medium",
@@ -31,6 +57,7 @@ export const initialTasks: HouseholdTask[] = [
     id: "clean-fridge",
     title: "Kühlschrank auswischen",
     category: "Küche",
+    roomId: "kitchen",
     intervalDays: 30,
     dueDate: "2026-07-18",
     urgency: "high",
@@ -42,6 +69,7 @@ export const initialTasks: HouseholdTask[] = [
     id: "deep-clean-bathroom",
     title: "Bad Deep Clean",
     category: "Bad",
+    roomId: "bathroom",
     intervalDays: 7,
     dueDate: "2026-07-18",
     urgency: "high",
@@ -53,6 +81,7 @@ export const initialTasks: HouseholdTask[] = [
     id: "clean-washing-machine",
     title: "Waschmaschine reinigen",
     category: "Bad",
+    roomId: "laundry",
     intervalDays: 45,
     dueDate: "2026-07-20",
     urgency: "low",
@@ -64,6 +93,7 @@ export const initialTasks: HouseholdTask[] = [
     id: "check-pantry",
     title: "Vorratsschrank prüfen",
     category: "Küche",
+    roomId: "kitchen",
     intervalDays: 21,
     dueDate: "2026-07-21",
     urgency: "low",
@@ -75,6 +105,7 @@ export const initialTasks: HouseholdTask[] = [
     id: "wipe-windowsill",
     title: "Fensterbank abwischen",
     category: "Wohnbereich",
+    roomId: "living-room",
     intervalDays: 14,
     dueDate: "2026-07-22",
     urgency: "low",
@@ -95,10 +126,31 @@ export function formatInterval(intervalDays: number) {
 }
 
 export function getTomorrowIso(todayIso: string) {
-  const [year, month, day] = todayIso.split("-").map(Number);
-  const tomorrow = new Date(Date.UTC(year, month - 1, day + 1));
+  return addDaysIso(todayIso, 1);
+}
 
-  return tomorrow.toISOString().slice(0, 10);
+export function addDaysIso(dateIso: string, days: number) {
+  const [year, month, day] = dateIso.split("-").map(Number);
+  const nextDate = new Date(Date.UTC(year, month - 1, day + days));
+
+  return nextDate.toISOString().slice(0, 10);
+}
+
+export function getNextDueDateAfterCompletion(
+  task: HouseholdTask,
+  completedAtIso: string,
+) {
+  return addDaysIso(completedAtIso, task.intervalDays);
+}
+
+export function getNextDueDateInRhythm(task: HouseholdTask, todayIso: string) {
+  let nextDueDate = task.dueDate;
+
+  while (nextDueDate <= todayIso) {
+    nextDueDate = addDaysIso(nextDueDate, task.intervalDays);
+  }
+
+  return nextDueDate;
 }
 
 export function isDueToday(task: HouseholdTask, todayIso: string) {
@@ -110,7 +162,7 @@ export function isOverdue(task: HouseholdTask, todayIso: string) {
 }
 
 export function isCompletedThisWeek(task: HouseholdTask, todayIso: string) {
-  if (task.status !== "completed" || !task.completedAt) {
+  if (!task.completedAt) {
     return false;
   }
 

@@ -73,7 +73,82 @@ Die App hilft nicht nur beim Sammeln, sondern beim Sortieren des Tages.
 
 Diese Funktionen bestimmen stark, wie sich die App anfuehlt. Sie sollten frueh ausprobiert werden, bevor wir Backend und Login einbauen.
 
-## Sprint 2: Supabase-Anbindung und Login
+## Sprint 2: Räume und App-Navigation
+
+### Ziel
+
+Die App bekommt eine klare Grundnavigation und Aufgaben koennen nach Raeumen betrachtet werden.
+
+### Ergebnis
+
+- mobile-first Grundlayout
+- Bottom-Navigation mit Heute, Morgen, Raeume und Alle
+- Aufgaben haben einen technischen Raumbezug
+- jeder Raum hat eine eigene Farbe
+- Raumfarbe ist zentral vorbereitet, damit sie spaeter bearbeitbar werden kann
+- Heute-Ansicht bleibt reduziert
+- Raeume-Ansicht zeigt kompakte Raumgruppen
+- Alle-Ansicht zeigt alle offenen Aufgaben als Verwaltungsbasis
+
+### Warum dieser Sprint vor Supabase kommt
+
+Die Raumstruktur beeinflusst spaeter Datenbanktabellen, Filter und Eingabeformulare. Deshalb testen wir sie zuerst lokal im Frontend, bevor wir sie dauerhaft speichern.
+
+## Sprint 3: Fokusmodus und Aufgaben anlegen
+
+### Ziel
+
+Die wichtigsten Platzhalter werden echte Funktionen.
+
+### Ergebnis
+
+- Fokusmodus zeigt eine Aufgabe auf einmal
+- Fokusmodus kann zur naechsten Aufgabe wechseln
+- Aufgaben koennen im Fokus erledigt oder auf morgen geschoben werden
+- neue Aufgaben koennen lokal angelegt werden
+- Aufgabe-anlegen-Formular nutzt wenige Felder und sinnvolle Defaults
+- Heute-Datum wird lokal berechnet statt hart im Code festgelegt
+
+### Warum noch lokal?
+
+Fokus und Aufgabe-anlegen bestimmen stark, wie die App im Alltag funktioniert. Bevor wir diese Daten in Supabase speichern, testen wir die Bedienung lokal im Frontend.
+
+## Sprint 4: Wiederholung, Ueberspringen und Bearbeiten
+
+### Ziel
+
+Wiederkehrende Aufgaben verhalten sich mehr wie echte Haushaltsroutinen.
+
+### Ergebnis
+
+- Erledigen berechnet die naechste Faelligkeit ab heute
+- Ueberspringen bleibt im bestehenden Rhythmus
+- Aufgaben koennen in `Alle` bearbeitet werden
+- Aufgaben koennen in `Alle` geloescht werden
+- Tagesansicht bleibt reduziert
+
+### Warum vor Supabase?
+
+Diese Logik bestimmt, welche Daten wir spaeter dauerhaft speichern. Wenn Wiederholung, Ueberspringen und Bearbeiten lokal sinnvoll funktionieren, koennen wir sie sauber in die Datenbank uebernehmen.
+
+## Sprint 5: Lokale Speicherung
+
+### Ziel
+
+Aufgaben bleiben im Browser erhalten, auch wenn die Seite neu geladen wird.
+
+### Ergebnis
+
+- Aufgaben werden aus `localStorage` geladen
+- Aufgaben werden nach Aenderungen automatisch gespeichert
+- gespeicherte Daten bekommen eine Version
+- Seed-Daten werden nur genutzt, wenn noch nichts gespeichert ist
+
+### Warum vor Supabase?
+
+Lokale Speicherung macht die App sofort alltagstauglicher. Gleichzeitig testen wir damit, welche Daten wirklich dauerhaft gebraucht werden, bevor wir Supabase anbinden.
+
+## Sprint 6: Supabase-Anbindung und Login
 
 ### Ziel
 
@@ -91,7 +166,7 @@ Nutzerinnen und Nutzer koennen sich anmelden und ihre eigenen Daten speichern.
 
 Supabase bringt Postgres, Auth und Row Level Security mit. Besonders RLS ist wichtig, damit Daten nicht versehentlich zwischen Nutzerinnen und Nutzern sichtbar werden.
 
-## Sprint 3: Haushalte und gemeinsame Nutzung
+## Sprint 7: Haushalte und gemeinsame Nutzung
 
 ### Ziel
 
@@ -109,7 +184,7 @@ Mehrere Personen koennen einem Haushalt angehoeren und gemeinsame Aufgaben sehen
 
 Wenn wir Haushalte erst sehr spaet einbauen, muessten wir viele Datenstrukturen umbauen. Deshalb kommt die gemeinsame Nutzung relativ frueh.
 
-## Sprint 4: Erinnerungen
+## Sprint 8: Erinnerungen
 
 ### Ziel
 
@@ -127,7 +202,7 @@ Die App erinnert morgens und abends an Aufgaben.
 
 Push-Benachrichtigungen sind auf Web-Apps nicht immer gleich verlaesslich. E-Mail ist technisch weniger elegant, aber robuster und als Fallback sinnvoll.
 
-## Sprint 5: Aufgabenpool ausbauen und UX polieren
+## Sprint 9: Aufgabenpool ausbauen und UX polieren
 
 ### Ziel
 
@@ -145,7 +220,7 @@ Die App fuehlt sich alltagstauglich an.
 
 Ein schoener Aufgabenpool bringt wenig, wenn Wiederholungen und Erledigungen nicht stimmen. Deshalb polieren wir, nachdem die Mechanik verlaesslich laeuft.
 
-## Sprint 6: Deployment und Betriebsdokumentation
+## Sprint 10: Deployment und Betriebsdokumentation
 
 ### Ziel
 
