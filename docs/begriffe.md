@@ -30,6 +30,18 @@ Ein System zum strukturierten Speichern von Daten, zum Beispiel Nutzer, Haushalt
 
 Eine nachvollziehbare Aenderung an der Datenbankstruktur. Beispiel: Eine neue Tabelle fuer Haushalte anlegen.
 
+## SQL
+
+Sprache fuer Datenbanken. Damit legt man Tabellen an, fragt Daten ab oder definiert Sicherheitsregeln.
+
+## Policy
+
+Eine Zugriffsregel in Supabase/Postgres. Beispiel: Nur Mitglieder eines Haushalts duerfen dessen Aufgaben sehen.
+
+## Enum
+
+Eine feste Liste erlaubter Werte. Beispiel: `low`, `medium`, `high` fuer Prioritaeten.
+
 ## Row Level Security
 
 Datenbankregeln, die festlegen, welche Zeilen eine Person sehen oder bearbeiten darf. Wichtig, damit Nutzer nur ihre eigenen Haushaltsdaten sehen.
