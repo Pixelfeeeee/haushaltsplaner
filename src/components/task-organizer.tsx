@@ -24,6 +24,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import styles from "@/app/page.module.css";
 
 type View = "today" | "tomorrow" | "rooms" | "all";
+type TemplateFilter = "all" | "room" | "quick" | "deep" | "rare";
 type StoredTaskData = {
   tasks: HouseholdTask[];
   version: 1;
@@ -36,6 +37,14 @@ const viewLabels: Record<View, string> = {
   tomorrow: "Morgen",
   rooms: "Räume",
   all: "Alle",
+};
+
+const templateFilterLabels: Record<TemplateFilter, string> = {
+  all: "Alle",
+  room: "Raum",
+  quick: "Schnell",
+  deep: "Deep Clean",
+  rare: "Selten",
 };
 
 export function TaskOrganizer() {
@@ -248,11 +257,12 @@ export function TaskOrganizer() {
       </header>
 
       {isCreateOpen ? (
-        <TaskForm onSaveTask={addTask} todayIso={todayIso} />
+        <TaskForm existingTasks={tasks} onSaveTask={addTask} todayIso={todayIso} />
       ) : null}
 
       {editingTask ? (
         <TaskForm
+          existingTasks={tasks}
           initialTask={editingTask}
           onSaveTask={updateTask}
           todayIso={todayIso}
@@ -406,14 +416,21 @@ function FocusView({
 }
 
 type TaskFormProps = {
+  existingTasks: HouseholdTask[];
   initialTask?: HouseholdTask;
   onSaveTask: (task: HouseholdTask) => void;
   todayIso: string;
 };
 
-function TaskForm({ initialTask, onSaveTask, todayIso }: TaskFormProps) {
+function TaskForm({
+  existingTasks,
+  initialTask,
+  onSaveTask,
+  todayIso,
+}: TaskFormProps) {
   const [title, setTitle] = useState(initialTask?.title ?? "");
   const [roomId, setRoomId] = useState<RoomId>(initialTask?.roomId ?? "kitchen");
+  const [templateFilter, setTemplateFilter] = useState<TemplateFilter>("room");
   const [intervalDays, setIntervalDays] = useState(
     initialTask?.intervalDays ?? 7,
   );
@@ -432,8 +449,15 @@ function TaskForm({ initialTask, onSaveTask, todayIso }: TaskFormProps) {
     [roomId],
   );
   const suggestedTemplates = useMemo(
-    () => getSuggestedTemplates(title, roomId, roomTemplates),
-    [roomId, roomTemplates, title],
+    () =>
+      getSuggestedTemplates({
+        existingTasks,
+        filter: templateFilter,
+        roomId,
+        roomTemplates,
+        title,
+      }),
+    [existingTasks, roomId, roomTemplates, templateFilter, title],
   );
 
   function applyTemplate(template: TaskTemplate) {
@@ -515,6 +539,20 @@ function TaskForm({ initialTask, onSaveTask, todayIso }: TaskFormProps) {
                   ? `${suggestedTemplates.length} Treffer`
                   : getRoom(roomId).name}
               </strong>
+            </div>
+            <div className={styles.templateFilters} aria-label="Vorlagen filtern">
+              {(["room", "all", "quick", "deep", "rare"] as TemplateFilter[]).map(
+                (filter) => (
+                  <button
+                    aria-pressed={templateFilter === filter}
+                    key={filter}
+                    onClick={() => setTemplateFilter(filter)}
+                    type="button"
+                  >
+                    {templateFilterLabels[filter]}
+                  </button>
+                ),
+              )}
             </div>
             {suggestedTemplates.length > 0 ? (
               <div className={styles.templateList}>
@@ -967,32 +1005,118 @@ function formatPriority(priority: HouseholdTask["urgency"]) {
   return "niedrig";
 }
 
-function getSuggestedTemplates(
-  title: string,
-  roomId: RoomId,
-  roomTemplates: TaskTemplate[],
-) {
+type SuggestedTemplateParams = {
+  existingTasks: HouseholdTask[];
+  filter: TemplateFilter;
+  roomId: RoomId;
+  roomTemplates: TaskTemplate[];
+  title: string;
+};
+
+function getSuggestedTemplates({
+  existingTasks,
+  filter,
+  roomId,
+  roomTemplates,
+  title,
+}: SuggestedTemplateParams) {
   const searchTerm = normalizeSearchTerm(title);
+  const existingTaskKeys = new Set(
+    existingTasks.map((task) => getTemplateMatchKey(task.title, task.roomId)),
+  );
+  const baseTemplates = searchTerm ? taskTemplates : roomTemplates;
 
-  if (!searchTerm) {
-    return roomTemplates.slice(0, 10);
-  }
-
-  return taskTemplates
+  return baseTemplates
     .filter((template) => {
+      if (existingTaskKeys.has(getTemplateMatchKey(template.title, template.roomId))) {
+        return false;
+      }
+
+      if (!matchesTemplateFilter(template, filter, roomId)) {
+        return false;
+      }
+
+      if (!searchTerm) {
+        return true;
+      }
+
       const room = getRoom(template.roomId);
       const searchableText = normalizeSearchTerm(`${template.title} ${room.name}`);
 
       return searchableText.includes(searchTerm);
     })
     .sort((first, second) => {
-      if (first.roomId !== second.roomId) {
-        return first.roomId === roomId ? -1 : 1;
+      const firstScore = getTemplateScore(first, searchTerm, roomId);
+      const secondScore = getTemplateScore(second, searchTerm, roomId);
+
+      if (firstScore !== secondScore) {
+        return secondScore - firstScore;
+      }
+
+      if (first.intervalDays !== second.intervalDays) {
+        return first.intervalDays - second.intervalDays;
       }
 
       return first.title.localeCompare(second.title, "de");
     })
     .slice(0, 10);
+}
+
+function matchesTemplateFilter(
+  template: TaskTemplate,
+  filter: TemplateFilter,
+  roomId: RoomId,
+) {
+  if (filter === "all") {
+    return true;
+  }
+
+  if (filter === "room") {
+    return template.roomId === roomId;
+  }
+
+  if (filter === "quick") {
+    return template.estimatedMinutes <= 10;
+  }
+
+  if (filter === "deep") {
+    const normalizedTitle = normalizeSearchTerm(template.title);
+
+    return (
+      template.estimatedMinutes >= 30 ||
+      normalizedTitle.includes("deep") ||
+      normalizedTitle.includes("gruendlich")
+    );
+  }
+
+  return template.intervalDays >= 60;
+}
+
+function getTemplateScore(
+  template: TaskTemplate,
+  searchTerm: string,
+  roomId: RoomId,
+) {
+  const normalizedTitle = normalizeSearchTerm(template.title);
+  let score = template.roomId === roomId ? 20 : 0;
+
+  if (!searchTerm) {
+    return score + (template.intervalDays <= 14 ? 8 : 0);
+  }
+
+  if (normalizedTitle === searchTerm) {
+    score += 80;
+  } else if (normalizedTitle.startsWith(searchTerm)) {
+    score += 60;
+  } else if (normalizedTitle.includes(searchTerm)) {
+    score += 40;
+  }
+
+  return score;
+}
+
+function getTemplateMatchKey(title: string, roomId: RoomId) {
+  return `${roomId}:${normalizeSearchTerm(title)}`;
 }
 
 function normalizeSearchTerm(value: string) {

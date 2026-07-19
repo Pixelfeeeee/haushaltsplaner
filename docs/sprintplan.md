@@ -182,7 +182,25 @@ Der Aufgabenpool soll breit genug sein, damit man typische Haushaltsroutinen sch
 
 Der Aufgabenpool ist Teil des Produktgefuehls. Bevor Vorlagen spaeter in einer Datenbank landen, testen wir lokal, welche Struktur im Alltag schnell genug ist.
 
-## Sprint 8: Supabase-Anbindung und Login
+## Sprint 8: Pool-UX und bessere Vorschlaege
+
+### Ziel
+
+Der grosse Aufgabenpool bleibt schnell und uebersichtlich bedienbar.
+
+### Ergebnis
+
+- Filterchips fuer Vorlagen
+- Relevanzsortierung
+- ausgeblendete Dubletten
+- maximal 10 Vorschlaege
+- ruhige mobile Darstellung
+
+### Warum noch vor Supabase?
+
+Der Pool ist Teil der Produktlogik. Wenn Suche, Filter und Dubletten lokal gut funktionieren, koennen wir diese Regeln spaeter sauber auf Datenbankdaten uebertragen.
+
+## Sprint 9: Supabase-Anbindung und Login
 
 ### Ziel
 
@@ -200,7 +218,7 @@ Nutzerinnen und Nutzer koennen sich anmelden und ihre eigenen Daten speichern.
 
 Supabase bringt Postgres, Auth und Row Level Security mit. Besonders RLS ist wichtig, damit Daten nicht versehentlich zwischen Nutzerinnen und Nutzern sichtbar werden.
 
-## Sprint 9: Haushalte und gemeinsame Nutzung
+## Sprint 10: Haushalte und gemeinsame Nutzung
 
 ### Ziel
 
@@ -218,7 +236,7 @@ Mehrere Personen koennen einem Haushalt angehoeren und gemeinsame Aufgaben sehen
 
 Wenn wir Haushalte erst sehr spaet einbauen, muessten wir viele Datenstrukturen umbauen. Deshalb kommt die gemeinsame Nutzung relativ frueh.
 
-## Sprint 10: Erinnerungen
+## Sprint 11: Erinnerungen
 
 ### Ziel
 
@@ -236,7 +254,7 @@ Die App erinnert morgens und abends an Aufgaben.
 
 Push-Benachrichtigungen sind auf Web-Apps nicht immer gleich verlaesslich. E-Mail ist technisch weniger elegant, aber robuster und als Fallback sinnvoll.
 
-## Sprint 11: Deployment und Betriebsdokumentation
+## Sprint 12: Deployment und Betriebsdokumentation
 
 ### Ziel
 

@@ -126,6 +126,18 @@ Automatische Vorschlaege waehrend der Eingabe. Beispiel: Beim Tippen von "Kueh" 
 
 Sehr aehnlich wie Autocomplete. Gemeint ist eine Suche, die schon beim Tippen Treffer zeigt, bevor man das komplette Wort geschrieben hat.
 
+## Filterchip
+
+Ein kleiner Umschalt-Button, der eine Liste eingrenzt. Beispiel: `Schnell` zeigt nur kurze Aufgaben.
+
+## Relevanzsortierung
+
+Treffer werden nicht nur alphabetisch sortiert, sondern danach, wie gut sie zur Eingabe passen.
+
+## Dublette
+
+Ein doppelter Eintrag. Beispiel: dieselbe Aufgabe zweimal im gleichen Raum.
+
 ## Formular
 
 Eine Eingabeflaeche fuer Daten. In unserer App nutzt das Formular wenige Felder, damit neue Aufgaben schnell angelegt werden koennen.
