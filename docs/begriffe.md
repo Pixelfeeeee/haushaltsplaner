@@ -42,6 +42,14 @@ Eine Zugriffsregel in Supabase/Postgres. Beispiel: Nur Mitglieder eines Haushalt
 
 Eine feste Liste erlaubter Werte. Beispiel: `low`, `medium`, `high` fuer Prioritaeten.
 
+## anon key
+
+Oeffentlicher Supabase-Schluessel fuer Browser-Apps. Er darf im Frontend genutzt werden, solange Row Level Security korrekt aktiv ist.
+
+## service_role key
+
+Privater Supabase-Admin-Schluessel. Er umgeht Sicherheitsregeln und darf niemals im Frontend oder als `NEXT_PUBLIC_` Variable gespeichert werden.
+
 ## Row Level Security
 
 Datenbankregeln, die festlegen, welche Zeilen eine Person sehen oder bearbeiten darf. Wichtig, damit Nutzer nur ihre eigenen Haushaltsdaten sehen.

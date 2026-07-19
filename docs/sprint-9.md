@@ -108,6 +108,10 @@ Diese Migration legt an:
 - `updated_at` Trigger
 - Row Level Security Policies
 
+Eine zweite Migration vergibt die noetigen technischen Rechte fuer eingeloggte Nutzer:
+
+`supabase/migrations/20260719203000_grant_authenticated_household_access.sql`
+
 ## Warum als Datei statt direkt nur im Dashboard?
 
 Eine Migration im Repository ist nachvollziehbar und wiederholbar. Wenn spaeter etwas kaputtgeht oder wir eine zweite Umgebung brauchen, wissen wir genau, welche Datenbankstruktur zur App gehoert.
@@ -131,4 +135,40 @@ supabase db push
 
 ## Status
 
-Die Migration ist vorbereitet, aber noch nicht in einer Cloud-Datenbank ausgefuehrt. Der aktuell sichtbare Lovable/Supabase-Connector zeigt kein Haushaltsplaner-Projekt an. Damit ich nicht versehentlich eine falsche Datenbank veraendere, brauchen wir die richtige Projekt-ID oder ein eindeutig verbundenes Supabase-Projekt.
+Die Migrationen wurden auf das Supabase-Projekt `Haushaltsplan` angewendet.
+
+Projekt-Ref:
+
+`uwkgtjaaiftbgbjdgydd`
+
+Angewendete Migrationen:
+
+- `create_household_schema`
+- `grant_authenticated_household_access`
+
+## App-Anbindung
+
+Die App nutzt jetzt `@supabase/supabase-js`.
+
+Umgesetzt:
+
+- Login-Panel in der App
+- Registrierung per E-Mail und Passwort
+- Login per E-Mail und Passwort
+- Logout
+- automatischer Haushalt `Zuhause`
+- beim ersten Login werden lokale Aufgaben in Supabase uebernommen, wenn der Haushalt noch leer ist
+- neue Aufgaben werden in Supabase gespeichert, wenn man eingeloggt ist
+- Bearbeiten, Loeschen, Erledigen, Morgen und Ueberspringen schreiben ebenfalls in Supabase
+
+## Noch offen fuer lokale Tests und Vercel
+
+Der `anon key` muss noch gesetzt werden:
+
+```bash
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
+
+Die Supabase URL steht bereits in `.env.example`.
+
+Wichtig: Der `anon key` ist der oeffentliche Browser-Key. Der `service_role` Key darf niemals ins Frontend oder in Vercel als `NEXT_PUBLIC_` Variable.

@@ -10,6 +10,7 @@
     "styles": "lessc src/styles/globals.less src/app/globals.css && lessc src/styles/page.less src/app/page.module.css && lessc src/components/theme-toggle.module.less src/components/theme-toggle.module.css"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.7",
     "next": "16.2.10",
     "react": "19.2.4",
     "react-dom": "19.2.4"

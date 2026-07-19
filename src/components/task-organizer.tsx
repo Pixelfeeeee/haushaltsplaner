@@ -1,7 +1,16 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import type { Session } from "@supabase/supabase-js";
+import {
+  completeCloudTask,
+  createCloudTask,
+  deleteCloudTask,
+  fetchHouseholdTasks,
+  getOrCreateDefaultHousehold,
+  updateCloudTask,
+} from "@/lib/cloud-tasks";
 import {
   describeRoadmapReason,
   formatInterval,
@@ -20,6 +29,7 @@ import {
   type RoomId,
   type TaskTemplate,
 } from "@/lib/tasks";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { ThemeToggle } from "@/components/theme-toggle";
 import styles from "@/app/page.module.css";
 
@@ -51,6 +61,11 @@ export function TaskOrganizer() {
   const [todayIso] = useState(getLocalDateIso);
   const tomorrowIso = getTomorrowIso(todayIso);
   const [tasks, setTasks] = useState<HouseholdTask[]>(loadStoredTasks);
+  const localImportTasksRef = useRef(tasks);
+  const [session, setSession] = useState<Session | null>(null);
+  const [householdId, setHouseholdId] = useState<string | null>(null);
+  const [isCloudLoading, setIsCloudLoading] = useState(false);
+  const [cloudMessage, setCloudMessage] = useState("");
   const [activeView, setActiveView] = useState<View>("today");
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [focusIndex, setFocusIndex] = useState(0);
@@ -65,6 +80,87 @@ export function TaskOrganizer() {
 
     window.localStorage.setItem(taskStorageKey, JSON.stringify(storedValue));
   }, [tasks]);
+
+  useEffect(() => {
+    if (!supabase) {
+      return;
+    }
+
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+
+      if (!nextSession) {
+        setHouseholdId(null);
+        setCloudMessage("");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!supabase || !session?.user) {
+      return;
+    }
+
+    const client = supabase;
+    const user = session.user;
+    let isCancelled = false;
+
+    async function loadCloudHousehold() {
+      setIsCloudLoading(true);
+      setCloudMessage("Synchronisiere Haushalt ...");
+
+      try {
+        const nextHouseholdId = await getOrCreateDefaultHousehold(
+          client,
+          user,
+        );
+        const cloudTasks = await fetchHouseholdTasks(client, nextHouseholdId);
+
+        if (isCancelled) {
+          return;
+        }
+
+        setHouseholdId(nextHouseholdId);
+
+        if (cloudTasks.length > 0) {
+          setTasks(cloudTasks);
+          setCloudMessage("Cloud-Sync aktiv");
+          return;
+        }
+
+        const importedTasks = await Promise.all(
+          localImportTasksRef.current.map((task) =>
+            createCloudTask(client, nextHouseholdId, user.id, task),
+          ),
+        );
+
+        if (!isCancelled) {
+          setTasks(importedTasks);
+          setCloudMessage("Lokale Aufgaben wurden in Zuhause übernommen");
+        }
+      } catch (error) {
+        setCloudMessage(getErrorMessage(error));
+      } finally {
+        if (!isCancelled) {
+          setIsCloudLoading(false);
+        }
+      }
+    }
+
+    loadCloudHousehold();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [session]);
 
   const dueTodayTasks = useMemo(
     () => sortTasksForRoadmap(tasks.filter((task) => isDueToday(task, todayIso))),
@@ -120,66 +216,127 @@ export function TaskOrganizer() {
     focusTasks.length > 0 ? focusTasks[focusIndex % focusTasks.length] : undefined;
   const editingTask = tasks.find((task) => task.id === editingTaskId);
 
-  function completeTask(taskId: string) {
+  async function completeTask(taskId: string) {
+    const task = tasks.find((currentTask) => currentTask.id === taskId);
+
+    if (!task) {
+      return;
+    }
+
+    const nextDueDate = getNextDueDateAfterCompletion(task, todayIso);
+
+    if (supabase && householdId && session?.user) {
+      try {
+        const updatedTask = await completeCloudTask(
+          supabase,
+          householdId,
+          session.user.id,
+          task,
+          todayIso,
+          nextDueDate,
+        );
+
+        setTasks((currentTasks) =>
+          currentTasks.map((currentTask) =>
+            currentTask.id === taskId ? updatedTask : currentTask,
+          ),
+        );
+        setCloudMessage("Erledigung gespeichert");
+        return;
+      } catch (error) {
+        setCloudMessage(getErrorMessage(error));
+      }
+    }
+
     setTasks((currentTasks) =>
-      currentTasks.map((task) =>
-        task.id === taskId
+      currentTasks.map((currentTask) =>
+        currentTask.id === taskId
           ? {
-              ...task,
+              ...currentTask,
               completedAt: todayIso,
-              dueDate: getNextDueDateAfterCompletion(task, todayIso),
+              dueDate: nextDueDate,
               postponedUntil: undefined,
               status: "open",
             }
-          : task,
+          : currentTask,
       ),
     );
   }
 
-  function postponeTask(taskId: string) {
-    setTasks((currentTasks) =>
-      currentTasks.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              dueDate: tomorrowIso,
-              postponedUntil: tomorrowIso,
-              status: "open",
-            }
-          : task,
-      ),
-    );
+  async function postponeTask(taskId: string) {
+    const task = tasks.find((currentTask) => currentTask.id === taskId);
+
+    if (!task) {
+      return;
+    }
+
+    const updatedTask = {
+      ...task,
+      dueDate: tomorrowIso,
+      postponedUntil: tomorrowIso,
+      status: "open" as const,
+    };
+
+    await saveUpdatedTask(updatedTask);
   }
 
-  function skipTask(taskId: string) {
-    setTasks((currentTasks) =>
-      currentTasks.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              dueDate: getNextDueDateInRhythm(task, todayIso),
-              postponedUntil: undefined,
-              status: "open",
-            }
-          : task,
-      ),
-    );
+  async function skipTask(taskId: string) {
+    const task = tasks.find((currentTask) => currentTask.id === taskId);
+
+    if (!task) {
+      return;
+    }
+
+    const updatedTask = {
+      ...task,
+      dueDate: getNextDueDateInRhythm(task, todayIso),
+      postponedUntil: undefined,
+      status: "open" as const,
+    };
+
+    await saveUpdatedTask(updatedTask);
   }
 
-  function addTask(task: HouseholdTask) {
-    setTasks((currentTasks) => [task, ...currentTasks]);
+  async function addTask(task: HouseholdTask) {
+    if (supabase && householdId && session?.user) {
+      try {
+        const cloudTask = await createCloudTask(
+          supabase,
+          householdId,
+          session.user.id,
+          task,
+        );
+
+        setTasks((currentTasks) => [cloudTask, ...currentTasks]);
+        setCloudMessage("Aufgabe in Zuhause gespeichert");
+      } catch (error) {
+        setCloudMessage(getErrorMessage(error));
+        setTasks((currentTasks) => [task, ...currentTasks]);
+      }
+    } else {
+      setTasks((currentTasks) => [task, ...currentTasks]);
+    }
+
     setActiveView("today");
     setIsCreateOpen(false);
   }
 
-  function updateTask(updatedTask: HouseholdTask) {
-    setTasks((currentTasks) =>
-      currentTasks.map((task) => (task.id === updatedTask.id ? updatedTask : task)),
-    );
+  async function updateTask(updatedTask: HouseholdTask) {
+    await saveUpdatedTask(updatedTask);
     setEditingTaskId(null);
   }
 
-  function deleteTask(taskId: string) {
+  async function deleteTask(taskId: string) {
+    if (supabase && householdId && session?.user) {
+      try {
+        await deleteCloudTask(supabase, taskId);
+        setCloudMessage("Aufgabe gelöscht");
+      } catch (error) {
+        setCloudMessage(getErrorMessage(error));
+        return;
+      }
+    }
+
     setTasks((currentTasks) => currentTasks.filter((task) => task.id !== taskId));
 
     if (editingTaskId === taskId) {
@@ -192,6 +349,28 @@ export function TaskOrganizer() {
     setIsFocusMode(true);
     setIsCreateOpen(false);
     setEditingTaskId(null);
+  }
+
+  async function saveUpdatedTask(updatedTask: HouseholdTask) {
+    if (supabase && householdId && session?.user) {
+      try {
+        const cloudTask = await updateCloudTask(supabase, updatedTask);
+
+        setTasks((currentTasks) =>
+          currentTasks.map((task) =>
+            task.id === updatedTask.id ? cloudTask : task,
+          ),
+        );
+        setCloudMessage("Aufgabe gespeichert");
+        return;
+      } catch (error) {
+        setCloudMessage(getErrorMessage(error));
+      }
+    }
+
+    setTasks((currentTasks) =>
+      currentTasks.map((task) => (task.id === updatedTask.id ? updatedTask : task)),
+    );
   }
 
   function closeFocusMode() {
@@ -255,6 +434,12 @@ export function TaskOrganizer() {
           <ThemeToggle />
         </div>
       </header>
+
+      <AuthPanel
+        cloudMessage={cloudMessage}
+        isCloudLoading={isCloudLoading}
+        session={session}
+      />
 
       {isCreateOpen ? (
         <TaskForm existingTasks={tasks} onSaveTask={addTask} todayIso={todayIso} />
@@ -415,10 +600,140 @@ function FocusView({
   );
 }
 
+type AuthPanelProps = {
+  cloudMessage: string;
+  isCloudLoading: boolean;
+  session: Session | null;
+};
+
+function AuthPanel({ cloudMessage, isCloudLoading, session }: AuthPanelProps) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [panelMessage, setPanelMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (!isSupabaseConfigured) {
+    return (
+      <section className={styles.authPanel} aria-label="Cloud-Sync Setup">
+        <div>
+          <strong>Lokaler Modus</strong>
+          <p>Für Login fehlt noch `NEXT_PUBLIC_SUPABASE_ANON_KEY`.</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (session?.user) {
+    return (
+      <section className={styles.authPanel} aria-label="Cloud-Sync Status">
+        <div>
+          <strong>Zuhause</strong>
+          <p>
+            {isCloudLoading
+              ? "Sync läuft ..."
+              : cloudMessage || "Cloud-Sync aktiv"}
+          </p>
+        </div>
+        <button
+          className={styles.secondaryAction}
+          onClick={() => {
+            void supabase?.auth.signOut();
+          }}
+          type="button"
+        >
+          Logout
+        </button>
+      </section>
+    );
+  }
+
+  async function submitAuth(mode: "sign-in" | "sign-up") {
+    if (!supabase) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setPanelMessage("");
+
+    const credentials = {
+      email,
+      password,
+    };
+    const { error } =
+      mode === "sign-in"
+        ? await supabase.auth.signInWithPassword(credentials)
+        : await supabase.auth.signUp(credentials);
+
+    if (error) {
+      setPanelMessage(error.message);
+    } else {
+      setPanelMessage(
+        mode === "sign-in"
+          ? "Login erfolgreich."
+          : "Account angelegt. Prüfe ggf. deine E-Mails.",
+      );
+    }
+
+    setIsSubmitting(false);
+  }
+
+  return (
+    <section className={styles.authPanel} aria-label="Login">
+      <div>
+        <strong>Cloud-Sync</strong>
+        <p>Einloggen, damit dein Haushalt online gespeichert wird.</p>
+      </div>
+      <form
+        className={styles.authForm}
+        onSubmit={(event) => {
+          event.preventDefault();
+          void submitAuth("sign-in");
+        }}
+      >
+        <input
+          autoComplete="email"
+          onChange={(event) => setEmail(event.target.value)}
+          placeholder="E-Mail"
+          type="email"
+          value={email}
+        />
+        <input
+          autoComplete="current-password"
+          minLength={6}
+          onChange={(event) => setPassword(event.target.value)}
+          placeholder="Passwort"
+          type="password"
+          value={password}
+        />
+        <div className={styles.authActions}>
+          <button
+            className={styles.primaryAction}
+            disabled={isSubmitting}
+            type="submit"
+          >
+            Login
+          </button>
+          <button
+            className={styles.secondaryAction}
+            disabled={isSubmitting}
+            onClick={() => {
+              void submitAuth("sign-up");
+            }}
+            type="button"
+          >
+            Registrieren
+          </button>
+        </div>
+        {panelMessage ? <p>{panelMessage}</p> : null}
+      </form>
+    </section>
+  );
+}
+
 type TaskFormProps = {
   existingTasks: HouseholdTask[];
   initialTask?: HouseholdTask;
-  onSaveTask: (task: HouseholdTask) => void;
+  onSaveTask: (task: HouseholdTask) => Promise<void> | void;
   todayIso: string;
 };
 
@@ -480,7 +795,7 @@ function TaskForm({
 
     const room = getRoom(roomId);
 
-    onSaveTask({
+    void onSaveTask({
       id: initialTask?.id ?? `custom-${Date.now()}`,
       title: trimmedTitle,
       category: room.name,
@@ -687,9 +1002,9 @@ function TomorrowView({
 }
 
 type TaskActions = {
-  onCompleteTask: (taskId: string) => void;
-  onPostponeTask: (taskId: string) => void;
-  onSkipTask: (taskId: string) => void;
+  onCompleteTask: (taskId: string) => Promise<void> | void;
+  onPostponeTask: (taskId: string) => Promise<void> | void;
+  onSkipTask: (taskId: string) => Promise<void> | void;
 };
 
 type TodayViewProps = TaskActions & {
@@ -805,7 +1120,7 @@ function RoomsView({
 }
 
 type AllTasksViewProps = TaskActions & {
-  onDeleteTask: (taskId: string) => void;
+  onDeleteTask: (taskId: string) => Promise<void> | void;
   onEditTask: (taskId: string) => void;
   tasks: HouseholdTask[];
   todayIso: string;
@@ -847,7 +1162,7 @@ type TaskListProps = TaskActions & {
   compact?: boolean;
   emptyText: string;
   emptyTitle: string;
-  onDeleteTask?: (taskId: string) => void;
+  onDeleteTask?: (taskId: string) => Promise<void> | void;
   onEditTask?: (taskId: string) => void;
   showManageActions?: boolean;
   tasks: HouseholdTask[];
@@ -1117,6 +1432,14 @@ function getTemplateScore(
 
 function getTemplateMatchKey(title: string, roomId: RoomId) {
   return `${roomId}:${normalizeSearchTerm(title)}`;
+}
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Da ist beim Speichern etwas schiefgelaufen.";
 }
 
 function normalizeSearchTerm(value: string) {
