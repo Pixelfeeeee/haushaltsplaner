@@ -117,18 +117,21 @@
 }
 .taskItem {
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) 78px;
-  gap: 14px;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  gap: 10px;
   align-items: center;
-  min-height: 78px;
-  padding: 16px 0;
+  min-height: 62px;
+  padding: 12px 0;
   border-bottom: 1px solid var(--line);
 }
 .taskItem h3 {
-  margin-top: 4px;
-  font-size: 20px;
-  line-height: 1.25;
+  margin-top: 2px;
+  overflow: hidden;
+  font-size: 18px;
+  line-height: 1.15;
   font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .taskContent {
   min-width: 0;
@@ -136,9 +139,16 @@
 .taskMeta {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  font-size: 13px;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.taskMeta > * {
+  flex: 0 0 auto;
 }
 .roomTag {
   display: inline-flex;
@@ -156,16 +166,18 @@
 .rowActions {
   grid-column: 3;
   display: grid;
-  grid-template-columns: repeat(2, 36px);
-  gap: 6px;
+  grid-template-columns: repeat(2, 32px);
+  gap: 5px;
+  align-self: start;
+  padding-top: 1px;
   justify-self: end;
 }
 .postponeAction,
 .skipAction {
-  width: 36px;
-  min-height: 36px;
+  width: 32px;
+  min-height: 32px;
   padding: 0;
-  font-size: 13px;
+  font-size: 12px;
 }
 .manageActions {
   grid-column: 2 / -1;
