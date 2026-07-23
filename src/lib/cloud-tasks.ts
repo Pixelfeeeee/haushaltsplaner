@@ -30,10 +30,24 @@ export type HouseholdMember = {
   userId: string;
 };
 
+export type HouseholdInvite = {
+  acceptedAt?: string;
+  createdAt: string;
+  expiresAt: string;
+  token: string;
+};
+
 type HouseholdMemberRow = {
   created_at: string;
   role: "owner" | "member";
   user_id: string;
+};
+
+type HouseholdInviteRow = {
+  accepted_at: string | null;
+  created_at: string;
+  expires_at: string;
+  token: string;
 };
 
 export async function getOrCreateDefaultHousehold(
@@ -138,6 +152,89 @@ export async function removeHouseholdMember(
   if (error) {
     throw error;
   }
+}
+
+export async function fetchHouseholdInvites(
+  client: SupabaseClient,
+  householdId: string,
+) {
+  const { data, error } = await client
+    .from("household_invites")
+    .select("accepted_at, created_at, expires_at, token")
+    .eq("household_id", householdId)
+    .is("accepted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(3);
+
+  if (error) {
+    throw error;
+  }
+
+  return (data as HouseholdInviteRow[] | null ?? []).map((invite) => ({
+    acceptedAt: invite.accepted_at ?? undefined,
+    createdAt: invite.created_at,
+    expiresAt: invite.expires_at,
+    token: invite.token,
+  }));
+}
+
+export async function createHouseholdInvite(
+  client: SupabaseClient,
+  householdId: string,
+  userId: string,
+) {
+  const { data, error } = await client
+    .from("household_invites")
+    .insert({
+      created_by: userId,
+      household_id: householdId,
+    })
+    .select("accepted_at, created_at, expires_at, token")
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  const invite = data as HouseholdInviteRow;
+
+  return {
+    acceptedAt: invite.accepted_at ?? undefined,
+    createdAt: invite.created_at,
+    expiresAt: invite.expires_at,
+    token: invite.token,
+  };
+}
+
+export async function deleteHouseholdInvite(
+  client: SupabaseClient,
+  householdId: string,
+  token: string,
+) {
+  const { error } = await client
+    .from("household_invites")
+    .delete()
+    .eq("household_id", householdId)
+    .eq("token", token);
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function acceptHouseholdInvite(
+  client: SupabaseClient,
+  inviteToken: string,
+) {
+  const { data, error } = await client.rpc("accept_household_invite", {
+    invite_token: inviteToken,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data as string;
 }
 
 export async function fetchHouseholdTasks(

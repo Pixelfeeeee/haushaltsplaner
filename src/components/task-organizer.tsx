@@ -4,15 +4,20 @@ import type { CSSProperties } from "react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type { Session } from "@supabase/supabase-js";
 import {
+  acceptHouseholdInvite,
   addHouseholdMember,
   completeCloudTask,
+  createHouseholdInvite,
   createCloudTask,
   deleteCloudTask,
+  deleteHouseholdInvite,
+  fetchHouseholdInvites,
   fetchHouseholdMembers,
   fetchHouseholdTasks,
   getOrCreateDefaultHousehold,
   removeHouseholdMember,
   updateCloudTask,
+  type HouseholdInvite,
   type HouseholdMember,
 } from "@/lib/cloud-tasks";
 import {
@@ -70,9 +75,11 @@ export function TaskOrganizer() {
   const [session, setSession] = useState<Session | null>(null);
   const [householdId, setHouseholdId] = useState<string | null>(null);
   const [members, setMembers] = useState<HouseholdMember[]>([]);
+  const [invites, setInvites] = useState<HouseholdInvite[]>([]);
   const [isCloudLoading, setIsCloudLoading] = useState(false);
   const [cloudMessage, setCloudMessage] = useState("");
   const [shareMessage, setShareMessage] = useState("");
+  const [pendingInviteToken, setPendingInviteToken] = useState(getInviteTokenFromUrl);
   const [activeView, setActiveView] = useState<View>("today");
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [focusIndex, setFocusIndex] = useState(0);
@@ -105,8 +112,8 @@ export function TaskOrganizer() {
       if (!nextSession) {
         setHouseholdId(null);
         setMembers([]);
+        setInvites([]);
         setCloudMessage("");
-        setShareMessage("");
       }
     });
 
@@ -127,13 +134,14 @@ export function TaskOrganizer() {
       setCloudMessage("Synchronisiere Haushalt ...");
 
       try {
-        const nextHouseholdId = await getOrCreateDefaultHousehold(
-          client,
-          user,
-        );
-        const [cloudTasks, householdMembers] = await Promise.all([
+        const acceptedInvite = Boolean(pendingInviteToken);
+        const nextHouseholdId = pendingInviteToken
+          ? await acceptHouseholdInvite(client, pendingInviteToken)
+          : await getOrCreateDefaultHousehold(client, user);
+        const [cloudTasks, householdMembers, householdInvites] = await Promise.all([
           fetchHouseholdTasks(client, nextHouseholdId),
           fetchHouseholdMembers(client, nextHouseholdId),
+          fetchHouseholdInvites(client, nextHouseholdId),
         ]);
 
         if (isCancelled) {
@@ -142,6 +150,16 @@ export function TaskOrganizer() {
 
         setHouseholdId(nextHouseholdId);
         setMembers(householdMembers);
+        setInvites(householdInvites);
+
+        if (acceptedInvite) {
+          setTasks(cloudTasks);
+          setCloudMessage("Einladung angenommen");
+          setShareMessage("Du bist jetzt in diesem Haushalt.");
+          clearInviteTokenFromUrl();
+          setPendingInviteToken(null);
+          return;
+        }
 
         if (cloudTasks.length > 0) {
           setTasks(cloudTasks);
@@ -181,7 +199,7 @@ export function TaskOrganizer() {
     return () => {
       isCancelled = true;
     };
-  }, [session]);
+  }, [pendingInviteToken, session]);
 
   const dueTodayTasks = useMemo(
     () => sortTasksForRoadmap(tasks.filter((task) => isDueToday(task, todayIso))),
@@ -398,6 +416,46 @@ export function TaskOrganizer() {
     }
   }
 
+  async function createInviteLink() {
+    if (!supabase || !householdId || !session?.user) {
+      setShareMessage("Bitte zuerst einloggen.");
+      return;
+    }
+
+    try {
+      const invite = await createHouseholdInvite(
+        supabase,
+        householdId,
+        session.user.id,
+      );
+      const nextInvites = await fetchHouseholdInvites(supabase, householdId);
+      const inviteUrl = getInviteUrl(invite.token);
+
+      setInvites(nextInvites);
+      setShareMessage("Einladungslink wurde erstellt.");
+      await copyText(inviteUrl);
+    } catch (error) {
+      setShareMessage(getShareErrorMessage(error));
+    }
+  }
+
+  async function revokeInviteLink(token: string) {
+    if (!supabase || !householdId) {
+      setShareMessage("Bitte zuerst einloggen.");
+      return;
+    }
+
+    try {
+      await deleteHouseholdInvite(supabase, householdId, token);
+      const nextInvites = await fetchHouseholdInvites(supabase, householdId);
+
+      setInvites(nextInvites);
+      setShareMessage("Einladungslink wurde widerrufen.");
+    } catch (error) {
+      setShareMessage(getShareErrorMessage(error));
+    }
+  }
+
   async function removeMember(userId: string) {
     if (!supabase || !householdId || !session?.user) {
       return;
@@ -490,10 +548,14 @@ export function TaskOrganizer() {
           <div className={styles.topbarTools}>
             <AuthPanel
               cloudMessage={cloudMessage}
+              hasPendingInvite={Boolean(pendingInviteToken)}
               isCloudLoading={isCloudLoading}
+              invites={invites}
               members={members}
+              onCreateInviteLink={createInviteLink}
               onInviteMember={inviteHouseholdMember}
               onRemoveMember={removeMember}
+              onRevokeInviteLink={revokeInviteLink}
               session={session}
               shareMessage={shareMessage}
               taskCount={tasks.length}
@@ -684,10 +746,14 @@ function FocusView({
 
 type AuthPanelProps = {
   cloudMessage: string;
+  hasPendingInvite: boolean;
+  invites: HouseholdInvite[];
   isCloudLoading: boolean;
   members: HouseholdMember[];
+  onCreateInviteLink: () => Promise<void> | void;
   onInviteMember: (userId: string) => Promise<void> | void;
   onRemoveMember: (userId: string) => Promise<void> | void;
+  onRevokeInviteLink: (token: string) => Promise<void> | void;
   session: Session | null;
   shareMessage: string;
   taskCount: number;
@@ -695,10 +761,14 @@ type AuthPanelProps = {
 
 function AuthPanel({
   cloudMessage,
+  hasPendingInvite,
+  invites,
   isCloudLoading,
   members,
+  onCreateInviteLink,
   onInviteMember,
   onRemoveMember,
+  onRevokeInviteLink,
   session,
   shareMessage,
   taskCount,
@@ -785,7 +855,7 @@ function AuthPanel({
           onClick={() => setIsOpen((currentValue) => !currentValue)}
           type="button"
         >
-          <span className={styles.accountIcon} aria-hidden="true" />
+          <AccountIcon />
           <span className={dotClassName} aria-hidden="true" />
         </button>
         {isOpen ? (
@@ -821,7 +891,7 @@ function AuthPanel({
           onClick={() => setIsOpen((currentValue) => !currentValue)}
           type="button"
         >
-          <span className={styles.accountIcon} aria-hidden="true" />
+          <AccountIcon />
           <span className={dotClassName} aria-hidden="true" />
         </button>
         {isOpen ? (
@@ -877,12 +947,37 @@ function AuthPanel({
               <button
                 className={styles.copyAction}
                 onClick={() => {
-                  void navigator.clipboard?.writeText(session.user.id);
+                  void onCreateInviteLink();
                 }}
                 type="button"
               >
-                Meine User-ID kopieren
+                Einladungslink kopieren
               </button>
+              {invites.length > 0 ? (
+                <div className={styles.inviteList}>
+                  {invites.map((invite) => (
+                    <div className={styles.inviteItem} key={invite.token}>
+                      <span>Bis {formatDate(invite.expiresAt.slice(0, 10))}</span>
+                      <button
+                        onClick={() => {
+                          void copyText(getInviteUrl(invite.token));
+                        }}
+                        type="button"
+                      >
+                        Kopieren
+                      </button>
+                      <button
+                        onClick={() => {
+                          void onRevokeInviteLink(invite.token);
+                        }}
+                        type="button"
+                      >
+                        Widerrufen
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
               <form
                 className={styles.inviteForm}
                 onSubmit={(event) => {
@@ -893,7 +988,7 @@ function AuthPanel({
               >
                 <input
                   onChange={(event) => setInviteUserId(event.target.value)}
-                  placeholder="User-ID einfügen"
+                  placeholder="oder User-ID einfügen"
                   value={inviteUserId}
                 />
                 <button className={styles.secondaryAction} type="submit">
@@ -957,7 +1052,7 @@ function AuthPanel({
         onClick={() => setIsOpen((currentValue) => !currentValue)}
         type="button"
       >
-        <span className={styles.accountIcon} aria-hidden="true" />
+        <AccountIcon />
         <span className={dotClassName} aria-hidden="true" />
       </button>
       {isOpen ? (
@@ -974,8 +1069,9 @@ function AuthPanel({
           </div>
           <span className={statusClassName}>Nicht eingeloggt</span>
           <p>
-            Einloggen, damit deine Aufgaben online gespeichert und später geteilt
-            werden können.
+            {hasPendingInvite
+              ? "Einladung erkannt. Logg dich ein, dann kommst du in den Haushalt."
+              : "Einloggen, damit deine Aufgaben online gespeichert und später geteilt werden können."}
           </p>
           <form
             className={styles.authForm}
@@ -1025,6 +1121,40 @@ function AuthPanel({
         </section>
       ) : null}
     </div>
+  );
+}
+
+function AccountIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className={styles.accountIcon}
+      fill="none"
+      height="18"
+      viewBox="0 0 24 24"
+      width="18"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M9 12h8m0 0-3-3m3 3-3 3"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M15 5h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-3"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M10 19H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h3"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
+    </svg>
   );
 }
 
@@ -1837,6 +1967,45 @@ function isUuid(value: string) {
 
 function shortenUserId(userId: string) {
   return `${userId.slice(0, 8)}...${userId.slice(-4)}`;
+}
+
+function getInviteTokenFromUrl() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const token = new URLSearchParams(window.location.search).get("invite");
+
+  return token && isUuid(token) ? token : null;
+}
+
+function clearInviteTokenFromUrl() {
+  const url = new URL(window.location.href);
+
+  url.searchParams.delete("invite");
+  window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+}
+
+function getInviteUrl(token: string) {
+  if (typeof window === "undefined") {
+    return `/?invite=${token}`;
+  }
+
+  const url = new URL(window.location.href);
+
+  url.search = "";
+  url.hash = "";
+  url.searchParams.set("invite", token);
+
+  return url.toString();
+}
+
+async function copyText(value: string) {
+  if (!navigator.clipboard) {
+    return;
+  }
+
+  await navigator.clipboard.writeText(value);
 }
 
 function normalizeSearchTerm(value: string) {

@@ -103,7 +103,7 @@
   position: relative;
 }
 .accountButton {
-  display: grid;
+  display: inline-grid;
   position: relative;
   place-items: center;
   width: 42px;
@@ -111,42 +111,28 @@
   border: 1px solid var(--line);
   border-radius: 999px;
   color: var(--foreground);
-  background: var(--surface);
+  background: transparent;
+  line-height: 1;
 }
-.accountButton:hover,
-.accountButton:focus-visible {
+.accountButton:hover {
   border-color: var(--accent);
-  outline: 0;
+  color: var(--accent);
 }
 .accountButton:focus-visible {
-  box-shadow: 0 0 0 3px var(--focus);
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
 }
 .accountIcon {
-  position: relative;
-  width: 17px;
-  height: 17px;
-  border: 2px solid currentColor;
-  border-radius: 999px;
-}
-.accountIcon::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: -13px;
-  width: 24px;
-  height: 14px;
-  border: 2px solid currentColor;
-  border-bottom: 0;
-  border-radius: 999px 999px 0 0;
-  transform: translateX(-50%);
+  width: 18px;
+  height: 18px;
 }
 .accountDot {
   position: absolute;
-  right: 3px;
-  bottom: 3px;
-  width: 10px;
-  height: 10px;
-  border: 2px solid var(--surface);
+  right: 7px;
+  bottom: 7px;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--background);
   border-radius: 999px;
 }
 .accountDotOnline {
@@ -321,6 +307,33 @@
   color: var(--foreground);
   background: var(--background);
   font-size: 13px;
+  font-weight: 750;
+}
+.inviteList {
+  display: grid;
+  gap: 6px;
+}
+.inviteItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 6px;
+  align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+}
+.inviteItem span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+.inviteItem button {
+  min-height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 10px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 12px;
   font-weight: 750;
 }
 .inviteForm {

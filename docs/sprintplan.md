@@ -272,6 +272,28 @@ Ein Haushalt kann von mehr als einer eingeloggten Person genutzt werden.
 
 E-Mail-Adressen aus Supabase Auth duerfen nicht einfach im Browser gesucht werden. Eine gute Einladung per E-Mail braucht einen sicheren Serverweg oder eine eigene Einladungstabelle. Die User-ID-Version ist technisch schlicht, aber fuer den ersten gemeinsamen Haushalt sicherer und schneller.
 
+## Sprint 13: Einladungslinks
+
+### Ziel
+
+Gemeinsame Haushalte sollen ohne User-ID-Gefummel nutzbar werden.
+
+### Ergebnis
+
+- Einladungslink im Account-Menue erzeugen
+- Link automatisch kopieren
+- offene Links anzeigen
+- offene Links widerrufen
+- Einladung per `?invite=...` erkennen
+- Einladung nach Login annehmen
+- neue Supabase-Tabelle `household_invites`
+- Datenbankfunktionen fuer Einladungsannahme
+- SECURITY DEFINER Funktionen gegen anonymen Zugriff gehaertet
+
+### Warum dieser Sprint wichtig ist
+
+Teilen muss im Alltag schnell funktionieren. Ein Link ist deutlich verstaendlicher als eine technische User-ID und bereitet spaeter echte E-Mail-Einladungen vor.
+
 ## Sprint 10: Haushalte und gemeinsame Nutzung
 
 ### Ziel

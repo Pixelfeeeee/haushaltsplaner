@@ -221,3 +221,15 @@ Eine technische Kennung. Nutzer sehen meist den Namen, der Code nutzt aber eine 
 ## CSS Custom Property
 
 Eine CSS-Variable. Wir nutzen sie zum Beispiel, um die Raumfarbe als `--room-color` an ein Element zu geben.
+
+## Token
+
+Ein zufaelliger geheimer Code. Bei Einladungslinks steckt der Token in der URL und beweist, dass jemand die Einladung besitzt.
+
+## RPC
+
+Remote Procedure Call. In Supabase bedeutet das meistens: Die App ruft eine Datenbankfunktion auf, statt direkt eine Tabelle zu veraendern.
+
+## SECURITY DEFINER
+
+Eine Datenbankfunktion laeuft mit den Rechten ihres Erstellers. Das ist nuetzlich fuer kontrollierte Spezialfaelle, aber sicherheitskritisch. Deshalb begrenzen wir genau, wer diese Funktion ausfuehren darf.
