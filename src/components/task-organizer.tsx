@@ -39,6 +39,7 @@ type StoredTaskData = {
   tasks: HouseholdTask[];
   version: 1;
 };
+type CloudMode = "local" | "offline" | "syncing" | "online" | "error";
 
 const taskStorageKey = "haushaltsplaner.tasks";
 
@@ -132,7 +133,13 @@ export function TaskOrganizer() {
 
         if (cloudTasks.length > 0) {
           setTasks(cloudTasks);
-          setCloudMessage("Cloud-Sync aktiv");
+          setCloudMessage("Online gespeichert");
+          return;
+        }
+
+        if (localImportTasksRef.current.length === 0) {
+          setTasks([]);
+          setCloudMessage("Zuhause ist bereit");
           return;
         }
 
@@ -144,7 +151,9 @@ export function TaskOrganizer() {
 
         if (!isCancelled) {
           setTasks(importedTasks);
-          setCloudMessage("Lokale Aufgaben wurden in Zuhause übernommen");
+          setCloudMessage(
+            `${importedTasks.length} lokale Aufgaben wurden online gespeichert`,
+          );
         }
       } catch (error) {
         setCloudMessage(getErrorMessage(error));
@@ -241,7 +250,7 @@ export function TaskOrganizer() {
             currentTask.id === taskId ? updatedTask : currentTask,
           ),
         );
-        setCloudMessage("Erledigung gespeichert");
+        setCloudMessage("Erledigung online gespeichert");
         return;
       } catch (error) {
         setCloudMessage(getErrorMessage(error));
@@ -308,7 +317,7 @@ export function TaskOrganizer() {
         );
 
         setTasks((currentTasks) => [cloudTask, ...currentTasks]);
-        setCloudMessage("Aufgabe in Zuhause gespeichert");
+        setCloudMessage("Aufgabe online gespeichert");
       } catch (error) {
         setCloudMessage(getErrorMessage(error));
         setTasks((currentTasks) => [task, ...currentTasks]);
@@ -361,7 +370,7 @@ export function TaskOrganizer() {
             task.id === updatedTask.id ? cloudTask : task,
           ),
         );
-        setCloudMessage("Aufgabe gespeichert");
+        setCloudMessage("Aufgabe online gespeichert");
         return;
       } catch (error) {
         setCloudMessage(getErrorMessage(error));
@@ -407,10 +416,21 @@ export function TaskOrganizer() {
   return (
     <div className={styles.page}>
       <header className={styles.topbar}>
-        <div>
-          <p className={styles.kicker}>Haushaltsplaner</p>
-          <h1>{isFocusMode ? "Fokus" : pageTitle}</h1>
-          <p className={styles.summary}>{pageSummary}</p>
+        <div className={styles.topbarHead}>
+          <div>
+            <p className={styles.kicker}>Haushaltsplaner</p>
+            <h1>{isFocusMode ? "Fokus" : pageTitle}</h1>
+            <p className={styles.summary}>{pageSummary}</p>
+          </div>
+          <div className={styles.topbarTools}>
+            <AuthPanel
+              cloudMessage={cloudMessage}
+              isCloudLoading={isCloudLoading}
+              session={session}
+              taskCount={tasks.length}
+            />
+            <ThemeToggle />
+          </div>
         </div>
         <div className={styles.actions}>
           <button
@@ -431,15 +451,8 @@ export function TaskOrganizer() {
           >
             {isCreateOpen ? "Abbrechen" : "Aufgabe anlegen"}
           </button>
-          <ThemeToggle />
         </div>
       </header>
-
-      <AuthPanel
-        cloudMessage={cloudMessage}
-        isCloudLoading={isCloudLoading}
-        session={session}
-      />
 
       {isCreateOpen ? (
         <TaskForm existingTasks={tasks} onSaveTask={addTask} todayIso={todayIso} />
@@ -604,46 +617,173 @@ type AuthPanelProps = {
   cloudMessage: string;
   isCloudLoading: boolean;
   session: Session | null;
+  taskCount: number;
 };
 
-function AuthPanel({ cloudMessage, isCloudLoading, session }: AuthPanelProps) {
+function AuthPanel({
+  cloudMessage,
+  isCloudLoading,
+  session,
+  taskCount,
+}: AuthPanelProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [panelMessage, setPanelMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    function closeOnOutsideClick(event: MouseEvent) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isOpen]);
+
+  const accountState: CloudMode = !isSupabaseConfigured
+    ? "local"
+    : session?.user
+      ? isCloudLoading
+        ? "syncing"
+        : cloudMessage.toLocaleLowerCase("de").includes("fehler") ||
+            cloudMessage.toLocaleLowerCase("de").includes("nicht")
+          ? "error"
+          : "online"
+      : "offline";
+  const accountLabel =
+    accountState === "online"
+      ? "Account und Cloud-Sync"
+      : "Login und Cloud-Sync";
+  const dotClassName = [
+    styles.accountDot,
+    accountState === "online" ? styles.accountDotOnline : "",
+    accountState === "syncing" ? styles.accountDotSyncing : "",
+    accountState === "error" ? styles.accountDotError : "",
+    accountState === "offline" ? styles.accountDotOffline : "",
+    accountState === "local" ? styles.accountDotLocal : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const statusClassName = [
+    styles.accountStatus,
+    accountState === "online" ? styles.accountStatusOnline : "",
+    accountState === "syncing" ? styles.accountStatusSyncing : "",
+    accountState === "error" ? styles.accountStatusError : "",
+    accountState === "offline" ? styles.accountStatusOffline : "",
+    accountState === "local" ? styles.accountStatusLocal : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   if (!isSupabaseConfigured) {
     return (
-      <section className={styles.authPanel} aria-label="Cloud-Sync Setup">
-        <div>
-          <strong>Lokaler Modus</strong>
-          <p>Für Login fehlt noch `NEXT_PUBLIC_SUPABASE_ANON_KEY`.</p>
-        </div>
-      </section>
+      <div className={styles.accountMenu} ref={menuRef}>
+        <button
+          aria-expanded={isOpen}
+          aria-label={accountLabel}
+          className={styles.accountButton}
+          onClick={() => setIsOpen((currentValue) => !currentValue)}
+          type="button"
+        >
+          <span className={styles.accountIcon} aria-hidden="true" />
+          <span className={dotClassName} aria-hidden="true" />
+        </button>
+        {isOpen ? (
+          <section className={styles.accountPanel} aria-label="Cloud-Sync Setup">
+            <div className={styles.accountPanelHeader}>
+              <strong>Lokaler Modus</strong>
+              <button
+                aria-label="Account-Menü schließen"
+                onClick={() => setIsOpen(false)}
+                type="button"
+              >
+                x
+              </button>
+            </div>
+            <span className={statusClassName}>Nur auf diesem Gerät</span>
+            <p>
+              Deine Aufgaben werden im Browser gespeichert. Für Login fehlt noch
+              der Supabase-Schlüssel.
+            </p>
+          </section>
+        ) : null}
+      </div>
     );
   }
 
   if (session?.user) {
     return (
-      <section className={styles.authPanel} aria-label="Cloud-Sync Status">
-        <div>
-          <strong>Zuhause</strong>
-          <p>
-            {isCloudLoading
-              ? "Sync läuft ..."
-              : cloudMessage || "Cloud-Sync aktiv"}
-          </p>
-        </div>
+      <div className={styles.accountMenu} ref={menuRef}>
         <button
-          className={styles.secondaryAction}
-          onClick={() => {
-            void supabase?.auth.signOut();
-          }}
+          aria-expanded={isOpen}
+          aria-label={accountLabel}
+          className={styles.accountButton}
+          onClick={() => setIsOpen((currentValue) => !currentValue)}
           type="button"
         >
-          Logout
+          <span className={styles.accountIcon} aria-hidden="true" />
+          <span className={dotClassName} aria-hidden="true" />
         </button>
-      </section>
+        {isOpen ? (
+          <section className={styles.accountPanel} aria-label="Cloud-Sync Status">
+            <div className={styles.accountPanelHeader}>
+              <strong>Zuhause</strong>
+              <button
+                aria-label="Account-Menü schließen"
+                onClick={() => setIsOpen(false)}
+                type="button"
+              >
+                x
+              </button>
+            </div>
+            <span className={statusClassName}>
+              {isCloudLoading ? "Synchronisiert" : "Online"}
+            </span>
+            <p>
+              {isCloudLoading
+                ? "Sync läuft ..."
+                : cloudMessage || "Online gespeichert"}
+            </p>
+            <p className={styles.accountText}>{session.user.email}</p>
+            <p className={styles.accountHint}>
+              {taskCount} {taskCount === 1 ? "Aufgabe" : "Aufgaben"} in diesem
+              Haushalt
+            </p>
+            <button
+              className={styles.secondaryAction}
+              onClick={() => {
+                void supabase?.auth.signOut();
+                setIsOpen(false);
+              }}
+              type="button"
+            >
+              Logout
+            </button>
+          </section>
+        ) : null}
+      </div>
     );
   }
 
@@ -665,7 +805,7 @@ function AuthPanel({ cloudMessage, isCloudLoading, session }: AuthPanelProps) {
         : await supabase.auth.signUp(credentials);
 
     if (error) {
-      setPanelMessage(error.message);
+      setPanelMessage(getAuthErrorMessage(error));
     } else {
       setPanelMessage(
         mode === "sign-in"
@@ -678,55 +818,82 @@ function AuthPanel({ cloudMessage, isCloudLoading, session }: AuthPanelProps) {
   }
 
   return (
-    <section className={styles.authPanel} aria-label="Login">
-      <div>
-        <strong>Cloud-Sync</strong>
-        <p>Einloggen, damit dein Haushalt online gespeichert wird.</p>
-      </div>
-      <form
-        className={styles.authForm}
-        onSubmit={(event) => {
-          event.preventDefault();
-          void submitAuth("sign-in");
-        }}
+    <div className={styles.accountMenu} ref={menuRef}>
+      <button
+        aria-expanded={isOpen}
+        aria-label={accountLabel}
+        className={styles.accountButton}
+        onClick={() => setIsOpen((currentValue) => !currentValue)}
+        type="button"
       >
-        <input
-          autoComplete="email"
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="E-Mail"
-          type="email"
-          value={email}
-        />
-        <input
-          autoComplete="current-password"
-          minLength={6}
-          onChange={(event) => setPassword(event.target.value)}
-          placeholder="Passwort"
-          type="password"
-          value={password}
-        />
-        <div className={styles.authActions}>
-          <button
-            className={styles.primaryAction}
-            disabled={isSubmitting}
-            type="submit"
-          >
-            Login
-          </button>
-          <button
-            className={styles.secondaryAction}
-            disabled={isSubmitting}
-            onClick={() => {
-              void submitAuth("sign-up");
+        <span className={styles.accountIcon} aria-hidden="true" />
+        <span className={dotClassName} aria-hidden="true" />
+      </button>
+      {isOpen ? (
+        <section className={styles.accountPanel} aria-label="Login">
+          <div className={styles.accountPanelHeader}>
+            <strong>Cloud-Sync</strong>
+            <button
+              aria-label="Account-Menü schließen"
+              onClick={() => setIsOpen(false)}
+              type="button"
+            >
+              x
+            </button>
+          </div>
+          <span className={statusClassName}>Nicht eingeloggt</span>
+          <p>
+            Einloggen, damit deine Aufgaben online gespeichert und später geteilt
+            werden können.
+          </p>
+          <form
+            className={styles.authForm}
+            onSubmit={(event) => {
+              event.preventDefault();
+              void submitAuth("sign-in");
             }}
-            type="button"
           >
-            Registrieren
-          </button>
-        </div>
-        {panelMessage ? <p>{panelMessage}</p> : null}
-      </form>
-    </section>
+            <input
+              autoComplete="email"
+              disabled={isSubmitting}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="E-Mail"
+              type="email"
+              value={email}
+            />
+            <input
+              autoComplete="current-password"
+              disabled={isSubmitting}
+              minLength={6}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Passwort"
+              type="password"
+              value={password}
+            />
+            <div className={styles.authActions}>
+              <button
+                className={styles.primaryAction}
+                disabled={isSubmitting}
+                type="submit"
+              >
+                Login
+              </button>
+              <button
+                className={styles.secondaryAction}
+                disabled={isSubmitting}
+                onClick={() => {
+                  void submitAuth("sign-up");
+                }}
+                type="button"
+              >
+                Registrieren
+              </button>
+            </div>
+            {panelMessage ? <p>{panelMessage}</p> : null}
+          </form>
+        </section>
+      ) : null}
+    </div>
   );
 }
 
@@ -1435,11 +1602,74 @@ function getTemplateMatchKey(title: string, roomId: RoomId) {
 }
 
 function getErrorMessage(error: unknown) {
+  const message = getRawErrorMessage(error).toLocaleLowerCase("de");
+
+  if (
+    message.includes("failed to fetch") ||
+    message.includes("network") ||
+    message.includes("fetch")
+  ) {
+    return "Keine Verbindung zur Cloud. Deine lokalen Daten bleiben erhalten.";
+  }
+
+  if (message.includes("jwt") || message.includes("session")) {
+    return "Deine Sitzung ist abgelaufen. Bitte logge dich neu ein.";
+  }
+
+  if (message.includes("permission") || message.includes("policy")) {
+    return "Die Cloud hat diese Aktion blockiert. Ich prüfe als Nächstes die Rechte.";
+  }
+
+  return "Beim Speichern ist etwas schiefgelaufen. Lokal bleibt die Änderung sichtbar.";
+}
+
+function getAuthErrorMessage(error: unknown) {
+  const message = getRawErrorMessage(error).toLocaleLowerCase("de");
+
+  if (message.includes("invalid login credentials")) {
+    return "E-Mail oder Passwort passt nicht.";
+  }
+
+  if (message.includes("email not confirmed")) {
+    return "Bitte bestätige zuerst deine E-Mail-Adresse.";
+  }
+
+  if (
+    message.includes("already registered") ||
+    message.includes("user already")
+  ) {
+    return "Für diese E-Mail gibt es schon einen Account. Versuch es mit Login.";
+  }
+
+  if (message.includes("password") && message.includes("characters")) {
+    return "Das Passwort braucht mindestens 6 Zeichen.";
+  }
+
+  if (message.includes("signup") && message.includes("disabled")) {
+    return "Registrierung ist in Supabase gerade deaktiviert.";
+  }
+
+  if (
+    message.includes("failed to fetch") ||
+    message.includes("network") ||
+    message.includes("fetch")
+  ) {
+    return "Keine Verbindung zur Cloud. Bitte gleich nochmal versuchen.";
+  }
+
+  return "Login hat nicht geklappt. Bitte E-Mail und Passwort prüfen.";
+}
+
+function getRawErrorMessage(error: unknown) {
   if (error instanceof Error) {
     return error.message;
   }
 
-  return "Da ist beim Speichern etwas schiefgelaufen.";
+  if (typeof error === "object" && error && "message" in error) {
+    return String(error.message);
+  }
+
+  return "unknown error";
 }
 
 function normalizeSearchTerm(value: string) {

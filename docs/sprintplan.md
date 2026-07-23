@@ -218,6 +218,42 @@ Nutzerinnen und Nutzer koennen sich anmelden und ihre eigenen Daten speichern.
 
 Supabase bringt Postgres, Auth und Row Level Security mit. Besonders RLS ist wichtig, damit Daten nicht versehentlich zwischen Nutzerinnen und Nutzern sichtbar werden.
 
+## Sprint 10: Schlankes Account-Menue
+
+### Ziel
+
+Login und Cloud-Sync sollen erreichbar bleiben, aber nicht mehr mitten im Aufgabeninhalt stehen.
+
+### Ergebnis
+
+- Account-Icon oben rechts
+- kompaktes Login-Overlay
+- Statuspunkt fuer eingeloggt, ausgeloggt oder lokalen Modus
+- Overlay schliesst per Escape oder Klick ausserhalb
+- Startseite bleibt visuell reduziert
+
+### Warum dieser Sprint wichtig ist
+
+Die App wird auf dem Handy im Alltag genutzt. Alles, was nicht direkt zur Tagesplanung gehoert, sollte erreichbar sein, aber nicht dauerhaft Platz und Aufmerksamkeit nehmen.
+
+## Sprint 11: Online-Stabilisierung
+
+### Ziel
+
+Login, Cloud-Sync und lokale Datenuebernahme sollen fuer normale Nutzung klarer und weniger technisch wirken.
+
+### Ergebnis
+
+- genauerer Sync-Status im Account-Menue
+- freundlichere Login- und Sync-Fehler
+- klarere Meldung beim Import lokaler Aufgaben
+- deaktivierte Login-Felder waehrend des Sendens
+- technische Pruefung mit Lint und Build
+
+### Warum dieser Sprint wichtig ist
+
+Vor gemeinsamen Haushalten muss der Single-Haushalt stabil sein. Sonst vermischen sich spaeter Login-Probleme, Rechte-Probleme und echte Sharing-Logik.
+
 ## Sprint 10: Haushalte und gemeinsame Nutzung
 
 ### Ziel
