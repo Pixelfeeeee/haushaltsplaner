@@ -251,6 +251,94 @@
   color: var(--muted);
   background: var(--background);
 }
+.sharePanel {
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.shareHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.shareHeader strong {
+  font-size: 14px;
+}
+.shareHeader span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+.memberList {
+  display: grid;
+  gap: 6px;
+}
+.memberItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.memberItem div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.memberItem span {
+  font-size: 13px;
+  font-weight: 750;
+}
+.memberItem small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.memberItem code {
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 12px;
+}
+.memberItem button {
+  grid-column: 1 / -1;
+  justify-self: start;
+  min-height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 10px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 750;
+}
+.copyAction {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
+  color: var(--foreground);
+  background: var(--background);
+  font-size: 13px;
+  font-weight: 750;
+}
+.inviteForm {
+  display: grid;
+  gap: 8px;
+}
+.inviteForm input {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
+  color: var(--foreground);
+  background: var(--surface);
+}
+.inviteForm input:focus {
+  border-color: var(--accent);
+  outline: 3px solid var(--focus);
+}
 .authForm {
   display: grid;
   gap: 10px;

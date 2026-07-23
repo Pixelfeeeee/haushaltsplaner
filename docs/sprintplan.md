@@ -254,6 +254,24 @@ Login, Cloud-Sync und lokale Datenuebernahme sollen fuer normale Nutzung klarer 
 
 Vor gemeinsamen Haushalten muss der Single-Haushalt stabil sein. Sonst vermischen sich spaeter Login-Probleme, Rechte-Probleme und echte Sharing-Logik.
 
+## Sprint 12: Gemeinsamer Haushalt als erste Version
+
+### Ziel
+
+Ein Haushalt kann von mehr als einer eingeloggten Person genutzt werden.
+
+### Ergebnis
+
+- Mitgliederliste im Account-Menue
+- eigene User-ID kopieren
+- registrierte Person per User-ID hinzufuegen
+- Mitglied entfernen
+- Supabase-Mitgliedertabelle gegen echte Datenbank geprueft
+
+### Warum noch keine E-Mail-Einladung?
+
+E-Mail-Adressen aus Supabase Auth duerfen nicht einfach im Browser gesucht werden. Eine gute Einladung per E-Mail braucht einen sicheren Serverweg oder eine eigene Einladungstabelle. Die User-ID-Version ist technisch schlicht, aber fuer den ersten gemeinsamen Haushalt sicherer und schneller.
+
 ## Sprint 10: Haushalte und gemeinsame Nutzung
 
 ### Ziel

@@ -4,12 +4,16 @@ import type { CSSProperties } from "react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type { Session } from "@supabase/supabase-js";
 import {
+  addHouseholdMember,
   completeCloudTask,
   createCloudTask,
   deleteCloudTask,
+  fetchHouseholdMembers,
   fetchHouseholdTasks,
   getOrCreateDefaultHousehold,
+  removeHouseholdMember,
   updateCloudTask,
+  type HouseholdMember,
 } from "@/lib/cloud-tasks";
 import {
   describeRoadmapReason,
@@ -65,8 +69,10 @@ export function TaskOrganizer() {
   const localImportTasksRef = useRef(tasks);
   const [session, setSession] = useState<Session | null>(null);
   const [householdId, setHouseholdId] = useState<string | null>(null);
+  const [members, setMembers] = useState<HouseholdMember[]>([]);
   const [isCloudLoading, setIsCloudLoading] = useState(false);
   const [cloudMessage, setCloudMessage] = useState("");
+  const [shareMessage, setShareMessage] = useState("");
   const [activeView, setActiveView] = useState<View>("today");
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [focusIndex, setFocusIndex] = useState(0);
@@ -98,7 +104,9 @@ export function TaskOrganizer() {
 
       if (!nextSession) {
         setHouseholdId(null);
+        setMembers([]);
         setCloudMessage("");
+        setShareMessage("");
       }
     });
 
@@ -123,13 +131,17 @@ export function TaskOrganizer() {
           client,
           user,
         );
-        const cloudTasks = await fetchHouseholdTasks(client, nextHouseholdId);
+        const [cloudTasks, householdMembers] = await Promise.all([
+          fetchHouseholdTasks(client, nextHouseholdId),
+          fetchHouseholdMembers(client, nextHouseholdId),
+        ]);
 
         if (isCancelled) {
           return;
         }
 
         setHouseholdId(nextHouseholdId);
+        setMembers(householdMembers);
 
         if (cloudTasks.length > 0) {
           setTasks(cloudTasks);
@@ -353,6 +365,59 @@ export function TaskOrganizer() {
     }
   }
 
+  async function inviteHouseholdMember(userId: string) {
+    if (!supabase || !householdId || !session?.user) {
+      setShareMessage("Bitte zuerst einloggen.");
+      return;
+    }
+
+    const trimmedUserId = userId.trim();
+
+    if (!isUuid(trimmedUserId)) {
+      setShareMessage("Bitte eine gültige User-ID einfügen.");
+      return;
+    }
+
+    if (trimmedUserId === session.user.id) {
+      setShareMessage("Du bist schon in diesem Haushalt.");
+      return;
+    }
+
+    if (members.some((member) => member.userId === trimmedUserId)) {
+      setShareMessage("Diese Person ist schon im Haushalt.");
+      return;
+    }
+
+    try {
+      await addHouseholdMember(supabase, householdId, trimmedUserId);
+      const nextMembers = await fetchHouseholdMembers(supabase, householdId);
+      setMembers(nextMembers);
+      setShareMessage("Person wurde hinzugefügt.");
+    } catch (error) {
+      setShareMessage(getShareErrorMessage(error));
+    }
+  }
+
+  async function removeMember(userId: string) {
+    if (!supabase || !householdId || !session?.user) {
+      return;
+    }
+
+    if (userId === session.user.id) {
+      setShareMessage("Du kannst dich nicht selbst entfernen.");
+      return;
+    }
+
+    try {
+      await removeHouseholdMember(supabase, householdId, userId);
+      const nextMembers = await fetchHouseholdMembers(supabase, householdId);
+      setMembers(nextMembers);
+      setShareMessage("Person wurde entfernt.");
+    } catch (error) {
+      setShareMessage(getShareErrorMessage(error));
+    }
+  }
+
   function openFocusMode() {
     setFocusIndex(0);
     setIsFocusMode(true);
@@ -426,7 +491,11 @@ export function TaskOrganizer() {
             <AuthPanel
               cloudMessage={cloudMessage}
               isCloudLoading={isCloudLoading}
+              members={members}
+              onInviteMember={inviteHouseholdMember}
+              onRemoveMember={removeMember}
               session={session}
+              shareMessage={shareMessage}
               taskCount={tasks.length}
             />
             <ThemeToggle />
@@ -616,18 +685,27 @@ function FocusView({
 type AuthPanelProps = {
   cloudMessage: string;
   isCloudLoading: boolean;
+  members: HouseholdMember[];
+  onInviteMember: (userId: string) => Promise<void> | void;
+  onRemoveMember: (userId: string) => Promise<void> | void;
   session: Session | null;
+  shareMessage: string;
   taskCount: number;
 };
 
 function AuthPanel({
   cloudMessage,
   isCloudLoading,
+  members,
+  onInviteMember,
+  onRemoveMember,
   session,
+  shareMessage,
   taskCount,
 }: AuthPanelProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [inviteUserId, setInviteUserId] = useState("");
   const [panelMessage, setPanelMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -771,6 +849,59 @@ function AuthPanel({
               {taskCount} {taskCount === 1 ? "Aufgabe" : "Aufgaben"} in diesem
               Haushalt
             </p>
+            <section className={styles.sharePanel} aria-label="Haushalt teilen">
+              <div className={styles.shareHeader}>
+                <strong>Mitglieder</strong>
+                <span>{members.length}</span>
+              </div>
+              <div className={styles.memberList}>
+                {members.map((member) => (
+                  <div className={styles.memberItem} key={member.userId}>
+                    <div>
+                      <span>{member.userId === session.user.id ? "Du" : "Person"}</span>
+                      <small>{member.role === "owner" ? "Owner" : "Mitglied"}</small>
+                    </div>
+                    <code>{shortenUserId(member.userId)}</code>
+                    {member.userId !== session.user.id ? (
+                      <button
+                        aria-label={`${shortenUserId(member.userId)} entfernen`}
+                        onClick={() => onRemoveMember(member.userId)}
+                        type="button"
+                      >
+                        Entfernen
+                      </button>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+              <button
+                className={styles.copyAction}
+                onClick={() => {
+                  void navigator.clipboard?.writeText(session.user.id);
+                }}
+                type="button"
+              >
+                Meine User-ID kopieren
+              </button>
+              <form
+                className={styles.inviteForm}
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void onInviteMember(inviteUserId);
+                  setInviteUserId("");
+                }}
+              >
+                <input
+                  onChange={(event) => setInviteUserId(event.target.value)}
+                  placeholder="User-ID einfügen"
+                  value={inviteUserId}
+                />
+                <button className={styles.secondaryAction} type="submit">
+                  Hinzufügen
+                </button>
+              </form>
+              {shareMessage ? <p>{shareMessage}</p> : null}
+            </section>
             <button
               className={styles.secondaryAction}
               onClick={() => {
@@ -1660,6 +1791,32 @@ function getAuthErrorMessage(error: unknown) {
   return "Login hat nicht geklappt. Bitte E-Mail und Passwort prüfen.";
 }
 
+function getShareErrorMessage(error: unknown) {
+  const message = getRawErrorMessage(error).toLocaleLowerCase("de");
+
+  if (message.includes("duplicate") || message.includes("already exists")) {
+    return "Diese Person ist schon im Haushalt.";
+  }
+
+  if (message.includes("foreign key")) {
+    return "Diese User-ID gehört zu keinem registrierten Account.";
+  }
+
+  if (message.includes("permission") || message.includes("policy")) {
+    return "Nur Owner können Personen hinzufügen oder entfernen.";
+  }
+
+  if (
+    message.includes("failed to fetch") ||
+    message.includes("network") ||
+    message.includes("fetch")
+  ) {
+    return "Keine Verbindung zur Cloud. Bitte gleich nochmal versuchen.";
+  }
+
+  return "Teilen hat nicht geklappt. Bitte User-ID prüfen.";
+}
+
 function getRawErrorMessage(error: unknown) {
   if (error instanceof Error) {
     return error.message;
@@ -1670,6 +1827,16 @@ function getRawErrorMessage(error: unknown) {
   }
 
   return "unknown error";
+}
+
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value,
+  );
+}
+
+function shortenUserId(userId: string) {
+  return `${userId.slice(0, 8)}...${userId.slice(-4)}`;
 }
 
 function normalizeSearchTerm(value: string) {

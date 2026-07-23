@@ -24,6 +24,18 @@ type CompletionRow = {
   task_id: string;
 };
 
+export type HouseholdMember = {
+  createdAt: string;
+  role: "owner" | "member";
+  userId: string;
+};
+
+type HouseholdMemberRow = {
+  created_at: string;
+  role: "owner" | "member";
+  user_id: string;
+};
+
 export async function getOrCreateDefaultHousehold(
   client: SupabaseClient,
   user: User,
@@ -73,6 +85,59 @@ export async function getOrCreateDefaultHousehold(
   }
 
   return householdId;
+}
+
+export async function fetchHouseholdMembers(
+  client: SupabaseClient,
+  householdId: string,
+) {
+  const { data, error } = await client
+    .from("household_members")
+    .select("created_at, role, user_id")
+    .eq("household_id", householdId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return (data as HouseholdMemberRow[] | null ?? []).map((member) => ({
+    createdAt: member.created_at,
+    role: member.role,
+    userId: member.user_id,
+  }));
+}
+
+export async function addHouseholdMember(
+  client: SupabaseClient,
+  householdId: string,
+  userId: string,
+) {
+  const { error } = await client.from("household_members").insert({
+    household_id: householdId,
+    role: "member",
+    user_id: userId,
+  });
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function removeHouseholdMember(
+  client: SupabaseClient,
+  householdId: string,
+  userId: string,
+) {
+  const { error } = await client
+    .from("household_members")
+    .delete()
+    .eq("household_id", householdId)
+    .eq("user_id", userId);
+
+  if (error) {
+    throw error;
+  }
 }
 
 export async function fetchHouseholdTasks(
@@ -241,4 +306,3 @@ function mapHouseholdTaskToTaskInsert(
     urgency: task.urgency,
   };
 }
-
